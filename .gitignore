@@ -1,0 +1,17 @@
+# Build artifacts
+c0vm
+c0vm.exe
+*.o
+*.dSYM/
+examples/*.bc0
+tests/c0/*.bc0
+
+# Editor files
+.vscode/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+*.pdf
