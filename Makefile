@@ -17,7 +17,8 @@ RELEASE_FLAGS = -O2 -DNDEBUG
 SRCS = src/c0vm_main.c \
        src/bc0_reader.c \
        src/c0vm.c       \
-       src/c0_native.c
+       src/c0_native.c  \
+       src/c0vm_disasm.c
 
 TARGET = c0vm
 

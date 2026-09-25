@@ -5,7 +5,7 @@ if "%1"=="clean" goto clean
 if "%1"=="test" goto test
 
 echo [*] Compiling C0 Virtual Machine...
-gcc -std=c11 -Wall -Wextra -Iinclude -O2 -o c0vm.exe src/c0vm_main.c src/bc0_reader.c src/c0vm.c src/c0_native.c
+gcc -std=c11 -Wall -Wextra -Iinclude -O2 -o c0vm.exe src/c0vm_main.c src/bc0_reader.c src/c0vm.c src/c0_native.c src/c0vm_disasm.c
 if %ERRORLEVEL% NEQ 0 (
     echo [-] Build failed!
     exit /b %ERRORLEVEL%
