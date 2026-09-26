@@ -2,30 +2,7 @@
  * C0VM - C0 Virtual Machine
  * CMU 15-122: Principles of Imperative Computation
  *
- * c0vm.c - Core bytecode interpreter (the execute() function).
- *
- * Architecture overview
- * =====================
- * The C0VM is a stack-based virtual machine closely modelled on the JVM.
- * Each function activation has a frame containing:
- *
- *   P   – pointer to the bytecode byte array
- *   pc  – program counter (index into P)
- *   V[] – local variable array (args are V[0..num_args-1])
- *   S[] – operand stack (grows upward; sp points one past the top)
- *
- * The main loop fetches an opcode byte, advances pc, then dispatches on
- * the opcode using a large switch statement.  Function calls push the
- * current frame onto a call stack and create a new frame; RETURN pops
- * back to the caller.
- *
- * Memory
- * ======
- * All heap objects (structs, arrays) are allocated via malloc/calloc and
- * are intentionally never freed during normal execution – the interpreter
- * acts as a GC-free "stop the world" environment matching the original
- * assignment's requirements.  On error, longjmp() escapes to main where
- * free_bc0_file() is called.
+ * c0vm.c - Core bytecode interpreter and execution tracer.
  */
 
 #include <stdio.h>
@@ -39,14 +16,9 @@
 #include "c0vm_abort.h"
 #include "c0_native.h"
 
-/* -----------------------------------------------------------------------
- * Operand-stack capacity: we start at 32 and double as needed.
- * --------------------------------------------------------------------- */
 #define STACK_INIT_CAP  32
-#define LOCALS_INIT_CAP 16
-
-/* Maximum call-stack depth (guards against infinite recursion) */
 #define MAX_CALL_DEPTH  1024
+#define MAX_TRACE_STEPS 10000
 
 /* -----------------------------------------------------------------------
  * Safe allocators
@@ -64,26 +36,59 @@ static void *xcalloc(size_t n, size_t sz) {
 }
 
 /* -----------------------------------------------------------------------
+ * Heap Object Tracker (for visualizer inspection and memory monitoring)
+ * --------------------------------------------------------------------- */
+typedef enum { HEAP_STRUCT, HEAP_ARRAY } heap_kind;
+
+typedef struct heap_block {
+    heap_kind kind;
+    void     *ptr;
+    int32_t   size;     /* struct byte size or array element count */
+    int32_t   elt_size; /* element size for array */
+    struct heap_block *next;
+} heap_block;
+
+static heap_block *global_heap = NULL;
+
+static void track_heap_alloc(heap_kind kind, void *ptr, int32_t size, int32_t elt_size) {
+    heap_block *b = (heap_block *)malloc(sizeof(heap_block));
+    if (!b) return;
+    b->kind     = kind;
+    b->ptr      = ptr;
+    b->size     = size;
+    b->elt_size = elt_size;
+    b->next     = global_heap;
+    global_heap = b;
+}
+
+static void clear_heap_tracker(void) {
+    heap_block *b = global_heap;
+    while (b) {
+        heap_block *next = b->next;
+        free(b);
+        b = next;
+    }
+    global_heap = NULL;
+}
+
+/* -----------------------------------------------------------------------
  * Frame helpers
  * --------------------------------------------------------------------- */
-
-/* Allocate a fresh frame for function f; copy args from caller's stack */
-static frame *make_frame(const function_info *f, c0_value *args) {
+static frame *make_frame(uint16_t fn_id, const function_info *f, c0_value *args) {
     frame *fr = (frame *)xmalloc(sizeof(frame));
-    fr->P  = f->code;
-    fr->pc = 0;
+    fr->fn_id = fn_id;
+    fr->P     = f->code;
+    fr->pc    = 0;
 
-    /* Local variables (initialised to int 0 = "safe" default) */
     uint16_t nv = f->num_vars > 0 ? f->num_vars : 1;
+    fr->num_vars = nv;
     fr->V = (c0_value *)xcalloc(nv, sizeof(c0_value));
     for (uint16_t i = 0; i < nv; i++)
         fr->V[i] = c0_int(0);
 
-    /* Copy arguments into V[0..num_args-1] */
     for (uint16_t i = 0; i < f->num_args; i++)
         fr->V[i] = args[i];
 
-    /* Operand stack */
     int32_t scap = (f->code_length > STACK_INIT_CAP)
                    ? (int32_t)f->code_length
                    : STACK_INIT_CAP;
@@ -101,15 +106,14 @@ static void free_frame(frame *fr) {
 }
 
 /* -----------------------------------------------------------------------
- * Stack operations (inlined for speed in the hot loop)
+ * Stack operations
  * --------------------------------------------------------------------- */
 static inline void stack_push(frame *fr, c0_value v) {
     if (fr->sp >= fr->s_size) {
-        /* Grow the stack */
         int32_t new_cap = fr->s_size * 2;
         fr->S = (c0_value *)realloc(fr->S, new_cap * sizeof(c0_value));
         if (fr->S == NULL)
-            c0_abort("operand stack overflow (could not grow)");
+            c0_abort("operand stack overflow");
         fr->s_size = new_cap;
     }
     fr->S[fr->sp++] = v;
@@ -127,9 +131,6 @@ static inline c0_value stack_peek(frame *fr) {
     return fr->S[fr->sp - 1];
 }
 
-/* -----------------------------------------------------------------------
- * Bytecode fetch helpers
- * --------------------------------------------------------------------- */
 static inline uint8_t fetch_u8(frame *fr) {
     return fr->P[fr->pc++];
 }
@@ -143,8 +144,6 @@ static inline uint16_t fetch_u16(frame *fr) {
 /* -----------------------------------------------------------------------
  * C0 array helpers
  * --------------------------------------------------------------------- */
-
-/* Allocate a C0 array of `count` elements each `elt_size` bytes. */
 static c0_array *alloc_array(int32_t count, int32_t elt_size) {
     if (count < 0)
         c0_abort("cannot allocate array with negative count %d", count);
@@ -152,10 +151,10 @@ static c0_array *alloc_array(int32_t count, int32_t elt_size) {
     a->count    = count;
     a->elt_size = elt_size;
     a->data     = xcalloc(count > 0 ? (size_t)count : 1, (size_t)elt_size);
+    track_heap_alloc(HEAP_ARRAY, a, count, elt_size);
     return a;
 }
 
-/* Return pointer to element i (bounds-checked). */
 static void *array_elem_ptr(c0_array *a, int32_t i) {
     c0_check_null(a);
     c0_check_bounds(i, a->count);
@@ -163,56 +162,186 @@ static void *array_elem_ptr(c0_array *a, int32_t i) {
 }
 
 /* -----------------------------------------------------------------------
- * execute() – main interpreter loop
+ * JSON output escaping
+ * --------------------------------------------------------------------- */
+static void json_print_string(FILE *f, const char *s) {
+    fputc('"', f);
+    while (*s) {
+        if (*s == '"') fputs("\\\"", f);
+        else if (*s == '\\') fputs("\\\\", f);
+        else if (*s == '\n') fputs("\\n", f);
+        else if (*s == '\r') fputs("\\r", f);
+        else if (*s == '\t') fputs("\\t", f);
+        else if ((unsigned char)*s < 32) fprintf(f, "\\u%04x", (unsigned char)*s);
+        else fputc(*s, f);
+        s++;
+    }
+    fputc('"', f);
+}
+
+/* -----------------------------------------------------------------------
+ * execute() and execute_with_trace()
  * --------------------------------------------------------------------- */
 
 int execute(bc0_file *bcf) {
+    return execute_with_trace(bcf, NULL);
+}
+
+int execute_with_trace(bc0_file *bcf, const char *trace_path) {
     if (bcf->function_count == 0)
         c0_abort("no functions in bytecode file");
 
-    /* Call stack */
+    FILE *tf = NULL;
+    if (trace_path != NULL) {
+        tf = fopen(trace_path, "w");
+        if (!tf) {
+            fprintf(stderr, "Warning: could not open trace output '%s'\n", trace_path);
+        }
+    }
+
+    /* Initialize trace file header */
+    if (tf) {
+        c0_trace_clear_stdout();
+        clear_heap_tracker();
+
+        fprintf(tf, "{\n  \"functions\": [\n");
+        for (uint16_t i = 0; i < bcf->function_count; i++) {
+            function_info *fn = &bcf->function_pool[i];
+            fprintf(tf, "    {\n      \"id\": %u,\n      \"name\": \"%s\",\n      \"num_args\": %u,\n      \"num_vars\": %u,\n      \"code_length\": %u,\n      \"instructions\": [\n",
+                    (unsigned)i, (i == 0 ? "_c0_main" : "fn"), (unsigned)fn->num_args,
+                    (unsigned)fn->num_vars, (unsigned)fn->code_length);
+
+            uint16_t cur_pc = 0;
+            char ins_buf[128];
+            bool first_ins = true;
+            while (cur_pc < fn->code_length) {
+                uint16_t next_pc = cur_pc;
+                format_instruction(fn->code, cur_pc, &next_pc, ins_buf, sizeof(ins_buf));
+                if (!first_ins) fprintf(tf, ",\n");
+                first_ins = false;
+                fprintf(tf, "        {\"pc\": %u, \"mnemonic\": \"%s\"}", (unsigned)cur_pc, ins_buf);
+                cur_pc = next_pc;
+            }
+            fprintf(tf, "\n      ]\n    }%s\n", (i + 1 < bcf->function_count ? "," : ""));
+        }
+        fprintf(tf, "  ],\n  \"steps\": [\n");
+    }
+
     frame *call_stack[MAX_CALL_DEPTH];
     int    call_depth = 0;
 
-    /* Start at function 0 (_c0_main), which takes 0 arguments */
     const function_info *main_fn = &bcf->function_pool[0];
     if (main_fn->num_args != 0)
         c0_abort("_c0_main must take 0 arguments");
 
-    frame *fr = make_frame(main_fn, NULL);
+    frame *fr = make_frame(0, main_fn, NULL);
     call_stack[call_depth++] = fr;
 
-    /* ===== Fetch-Decode-Execute loop ===================================== */
+    size_t step_count = 0;
+
+    /* ===== Main Execution Loop =========================================== */
     while (true) {
+        uint16_t current_pc = fr->pc;
+
+        /* Emit JSON trace step before executing instruction */
+        if (tf && step_count < MAX_TRACE_STEPS) {
+            char mbuf[128];
+            format_instruction(fr->P, current_pc, NULL, mbuf, sizeof(mbuf));
+
+            if (step_count > 0) fprintf(tf, ",\n");
+            fprintf(tf, "    {\n");
+            fprintf(tf, "      \"step\": %lu,\n", (unsigned long)step_count);
+            fprintf(tf, "      \"fn_id\": %u,\n", (unsigned)fr->fn_id);
+            fprintf(tf, "      \"pc\": %u,\n", (unsigned)current_pc);
+            fprintf(tf, "      \"mnemonic\": \"%s\",\n", mbuf);
+
+            /* Operand stack */
+            fprintf(tf, "      \"stack\": [");
+            for (int32_t s = 0; s < fr->sp; s++) {
+                if (s > 0) fprintf(tf, ", ");
+                if (fr->S[s].kind == C0_INTEGER) {
+                    fprintf(tf, "{\"type\": \"int\", \"val\": %d}", (int)fr->S[s].payload.i);
+                } else {
+                    fprintf(tf, "{\"type\": \"ptr\", \"addr\": \"%p\"}", fr->S[s].payload.p);
+                }
+            }
+            fprintf(tf, "],\n");
+
+            /* Call stack */
+            fprintf(tf, "      \"call_stack\": [\n");
+            for (int d = 0; d < call_depth; d++) {
+                frame *f = call_stack[d];
+                fprintf(tf, "        {\"fn_id\": %u, \"pc\": %u, \"locals\": [",
+                        (unsigned)f->fn_id, (unsigned)f->pc);
+                for (uint16_t v = 0; v < f->num_vars; v++) {
+                    if (v > 0) fprintf(tf, ", ");
+                    if (f->V[v].kind == C0_INTEGER) {
+                        fprintf(tf, "{\"type\": \"int\", \"val\": %d}", (int)f->V[v].payload.i);
+                    } else {
+                        fprintf(tf, "{\"type\": \"ptr\", \"addr\": \"%p\"}", f->V[v].payload.p);
+                    }
+                }
+                fprintf(tf, "]}%s\n", (d + 1 < call_depth ? "," : ""));
+            }
+            fprintf(tf, "      ],\n");
+
+            /* Heap objects */
+            fprintf(tf, "      \"heap\": [");
+            heap_block *hb = global_heap;
+            bool first_hb = true;
+            while (hb) {
+                if (!first_hb) fprintf(tf, ", ");
+                first_hb = false;
+                if (hb->kind == HEAP_ARRAY) {
+                    c0_array *arr = (c0_array *)hb->ptr;
+                    fprintf(tf, "{\"kind\": \"array\", \"addr\": \"%p\", \"count\": %d, \"elt_size\": %d, \"elements\": [",
+                            (void *)arr, (int)arr->count, (int)arr->elt_size);
+                    for (int32_t e = 0; e < arr->count && e < 16; e++) {
+                        if (e > 0) fprintf(tf, ", ");
+                        if (arr->elt_size == 4) {
+                            int32_t ival = *((int32_t *)((char *)arr->data + e * 4));
+                            fprintf(tf, "%d", ival);
+                        } else if (arr->elt_size == 1) {
+                            char cval = *((char *)arr->data + e);
+                            fprintf(tf, "%d", (int)cval);
+                        } else {
+                            fprintf(tf, "0");
+                        }
+                    }
+                    fprintf(tf, "]}");
+                } else {
+                    fprintf(tf, "{\"kind\": \"struct\", \"addr\": \"%p\", \"size\": %d}",
+                            hb->ptr, (int)hb->size);
+                }
+                hb = hb->next;
+            }
+            fprintf(tf, "],\n");
+
+            /* Stdout snapshot */
+            fprintf(tf, "      \"stdout\": ");
+            json_print_string(tf, c0_trace_get_stdout_snapshot());
+            fprintf(tf, "\n    }");
+
+            step_count++;
+        }
+
         uint8_t op = fetch_u8(fr);
 
-#ifdef C0VM_TRACE
-        fprintf(stderr, "[pc=%3u sp=%2d] op=0x%02X\n",
-                (unsigned)(fr->pc - 1), fr->sp, op);
-#endif
-
         switch (op) {
-
-        /* ----------------------------------------------------------------
-         * NOP
-         * -------------------------------------------------------------- */
         case 0x00: /* nop */
             break;
 
-        /* ----------------------------------------------------------------
-         * Constants
-         * -------------------------------------------------------------- */
-        case ACONST_NULL:                       /* push null pointer */
+        case ACONST_NULL:
             stack_push(fr, c0_ptr(NULL));
             break;
 
-        case BIPUSH: {                          /* push sign-extended byte */
+        case BIPUSH: {
             int8_t b = (int8_t)fetch_u8(fr);
             stack_push(fr, c0_int((int32_t)b));
             break;
         }
 
-        case ILDC: {                            /* push int_pool[index] */
+        case ILDC: {
             uint16_t idx = fetch_u16(fr);
             if (idx >= bcf->int_count)
                 c0_abort("ildc: index %u out of range (int_count=%u)",
@@ -221,7 +350,7 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        case ALDC: {                            /* push &string_pool[index] */
+        case ALDC: {
             uint16_t idx = fetch_u16(fr);
             if (idx >= bcf->string_count)
                 c0_abort("aldc: index %u out of range (string_count=%u)",
@@ -230,12 +359,8 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Local variable load / store
-         * -------------------------------------------------------------- */
         case VLOAD: {
             uint8_t i = fetch_u8(fr);
-            /* We trust the compiler; but add a debug-mode check */
             stack_push(fr, fr->V[i]);
             break;
         }
@@ -247,9 +372,6 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Stack manipulation
-         * -------------------------------------------------------------- */
         case POP:
             (void)stack_pop(fr);
             break;
@@ -273,9 +395,6 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Integer arithmetic
-         * -------------------------------------------------------------- */
         case IADD: {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             stack_push(fr, c0_int(x.payload.i + y.payload.i));
@@ -294,7 +413,6 @@ int execute(bc0_file *bcf) {
         case IDIV: {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             c0_check_div(y.payload.i);
-            /* C0 semantics: truncation toward zero (same as C99) */
             if (x.payload.i == INT32_MIN && y.payload.i == -1)
                 c0_abort("integer overflow: INT_MIN / -1");
             stack_push(fr, c0_int(x.payload.i / y.payload.i));
@@ -314,16 +432,13 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Bitwise / shift
-         * -------------------------------------------------------------- */
         case ISHL: {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             c0_check_shift(y.payload.i);
             stack_push(fr, c0_int(x.payload.i << y.payload.i));
             break;
         }
-        case ISHR: {  /* arithmetic (signed) right shift */
+        case ISHR: {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             int32_t  s = y.payload.i;
             c0_check_shift(s);
@@ -332,7 +447,7 @@ int execute(bc0_file *bcf) {
             stack_push(fr, c0_int(res));
             break;
         }
-        case IUSHR: { /* logical (unsigned) right shift */
+        case IUSHR: {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             c0_check_shift(y.payload.i);
             uint32_t u = (uint32_t)x.payload.i;
@@ -355,17 +470,11 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Comparisons – push 1 (true) or 0 (false) as int
-         * -------------------------------------------------------------- */
-
-        /* ---- Integer conditional branches (jump by signed offset) ---- */
 #define BRANCH_INT1(cmp)                                       \
         do {                                                   \
             int16_t off = (int16_t)fetch_u16(fr);             \
             c0_value v  = stack_pop(fr);                      \
             if (v.payload.i cmp 0) {                          \
-                /* offset is relative to the BRANCH opcode */ \
                 fr->pc = (uint16_t)(fr->pc - 3 + off);       \
             }                                                  \
         } while (0)
@@ -397,7 +506,6 @@ int execute(bc0_file *bcf) {
 #undef BRANCH_INT1
 #undef BRANCH_INT2
 
-        /* ---- Pointer comparisons ---- */
         case ACMPEQ: {
             int16_t  off = (int16_t)fetch_u16(fr);
             c0_value b   = stack_pop(fr);
@@ -415,22 +523,12 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ---- Unconditional goto ---- */
         case GOTO: {
             int16_t off = (int16_t)fetch_u16(fr);
             fr->pc = (uint16_t)(fr->pc - 3 + off);
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Indirect memory load / store via (void *) pointers.
-         *
-         * C0 stores int-typed values at int* pointers, and pointer-typed
-         * values at void** pointers.  IMLOAD/IMSTORE deal with int-type
-         * heap cells; AMLOAD/AMSTORE with pointer-type heap cells.
-         * Each cell is exactly sizeof(c0_value) bytes large (we
-         * allocate them that way in NEW).
-         * -------------------------------------------------------------- */
         case IMLOAD: {
             c0_value addr = stack_pop(fr);
             c0_check_null(addr.payload.p);
@@ -464,36 +562,20 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Struct allocation and field access
-         *
-         * NEW   <s>         – allocate s bytes; push pointer
-         * GETFIELD <o1,o2>  – pop ptr; push *(ptr + offset)
-         * PUTFIELD <o1,o2>  – pop val, pop ptr; *(ptr + offset) = val
-         * AADDF  <f>        – pop ptr; push ptr + f (field address)
-         * -------------------------------------------------------------- */
         case NEW: {
-            uint8_t s = fetch_u8(fr); /* struct size in bytes */
+            uint8_t s = fetch_u8(fr);
             void *p   = xcalloc(1, s);
+            track_heap_alloc(HEAP_STRUCT, p, (int32_t)s, 1);
             stack_push(fr, c0_ptr(p));
             break;
         }
         case GETFIELD: {
-            /* In the CMU encoding this is sometimes AADDF+IMLOAD/AMLOAD.
-               We handle the combined form used by newer compiler versions. */
             uint8_t  o1  = fetch_u8(fr);
             uint8_t  o2  = fetch_u8(fr);
             uint16_t off = (uint16_t)((o1 << 8) | o2);
             c0_value ptr = stack_pop(fr);
             c0_check_null(ptr.payload.p);
-            /* Determine type from what the slot contains; we push a raw
-               pointer to the field and let IMLOAD/AMLOAD handle it – but
-               since we're combining, we re-implement inline.            */
             void *field_addr = (char *)ptr.payload.p + off;
-            /* Push as a pointer to the field cell (the caller uses an
-               appropriate load afterwards, or we embed the load here).
-               The CMU c0vm spec says GETFIELD pops ptr, pushes the
-               VALUE at that field (typed as the tagged value stored). */
             c0_value stored;
             memcpy(&stored, field_addr, sizeof(c0_value));
             stack_push(fr, stored);
@@ -511,23 +593,15 @@ int execute(bc0_file *bcf) {
             break;
         }
         case AADDF: {
-            uint8_t  f   = fetch_u8(fr);   /* field offset in bytes */
+            uint8_t  f   = fetch_u8(fr);
             c0_value ptr = stack_pop(fr);
             c0_check_null(ptr.payload.p);
             stack_push(fr, c0_ptr((char *)ptr.payload.p + f));
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Array allocation and element access
-         *
-         * NEWARRAY  <s>      – pop count; allocate array of count*s bytes
-         * ARRAYLENGTH        – pop array ptr; push count
-         * AADDS              – pop array ptr, pop index; push &arr[index]
-         * (load/store via IMLOAD/IMSTORE or AMLOAD/AMSTORE as appropriate)
-         * -------------------------------------------------------------- */
         case NEWARRAY: {
-            uint8_t  s     = fetch_u8(fr); /* element size */
+            uint8_t  s     = fetch_u8(fr);
             c0_value cnt_v = stack_pop(fr);
             int32_t  count = cnt_v.payload.i;
             c0_array *arr  = alloc_array(count, (int32_t)s);
@@ -552,15 +626,6 @@ int execute(bc0_file *bcf) {
             break;
         }
 
-        /* ----------------------------------------------------------------
-         * Function calls
-         *
-         * INVOKESTATIC <c1,c2>  – call function_pool[c1<<8|c2]
-         * INVOKENATIVE <c1,c2>  – call native function indexed by
-         *                         native_pool[c1<<8|c2]
-         * RETURN                – return top-of-stack to caller
-         * ATHROW                – raise a runtime error (string on stack)
-         * -------------------------------------------------------------- */
         case INVOKESTATIC: {
             uint16_t fidx = fetch_u16(fr);
             if (fidx >= bcf->function_count)
@@ -568,20 +633,17 @@ int execute(bc0_file *bcf) {
                          (unsigned)fidx);
             const function_info *callee = &bcf->function_pool[fidx];
 
-            /* Pop arguments in reverse order into a temporary buffer */
             uint16_t nargs = callee->num_args;
             c0_value *args = (c0_value *)xmalloc(
                 (nargs > 0 ? nargs : 1) * sizeof(c0_value));
             for (int i = (int)nargs - 1; i >= 0; i--)
                 args[i] = stack_pop(fr);
 
-            /* Guard against unbounded recursion */
             if (call_depth >= MAX_CALL_DEPTH)
                 c0_abort("call stack overflow (max depth %d)", MAX_CALL_DEPTH);
 
-            /* Push current frame, start new one */
             call_stack[call_depth++] = fr;
-            fr = make_frame(callee, args);
+            fr = make_frame(fidx, callee, args);
             free(args);
             break;
         }
@@ -597,7 +659,6 @@ int execute(bc0_file *bcf) {
                 c0_abort("invokenative: function_table_index %u out of range",
                          (unsigned)idx);
 
-            /* Collect arguments */
             uint16_t nargs = ni->num_args;
             c0_value *args = (c0_value *)xmalloc(
                 (nargs > 0 ? nargs : 1) * sizeof(c0_value));
@@ -618,11 +679,14 @@ int execute(bc0_file *bcf) {
             call_depth--;
 
             if (call_depth == 0) {
-                /* Returned from _c0_main */
+                if (tf) {
+                    fprintf(tf, "\n  ],\n  \"return_value\": %d\n}\n", (int)retval.payload.i);
+                    fclose(tf);
+                }
+                clear_heap_tracker();
                 return retval.payload.i;
             }
 
-            /* Restore caller frame and push return value */
             fr = call_stack[call_depth];
             stack_push(fr, retval);
             break;
@@ -633,29 +697,24 @@ int execute(bc0_file *bcf) {
             const char *msg = (msg_v.kind == C0_POINTER && msg_v.payload.p)
                               ? (const char *)msg_v.payload.p
                               : "(no message)";
+            if (tf) fclose(tf);
             c0_abort("user-level abort: %s", msg);
-            break; /* unreachable */
+            break;
         }
 
-        /* ----------------------------------------------------------------
-         * Runtime assertion (assert opcode used by c0rt.h)
-         * -------------------------------------------------------------- */
         case CHECKTAG:
         case HASTAG:
-            /* Tag checking for tagged pointer types – skip operand bytes */
             fetch_u8(fr);
             fetch_u8(fr);
             break;
 
-        /* ----------------------------------------------------------------
-         * Unknown opcode
-         * -------------------------------------------------------------- */
         default:
+            if (tf) fclose(tf);
             c0_abort("unknown opcode 0x%02X at pc=%u", op,
                      (unsigned)(fr->pc - 1));
         }
     }
 
-    /* Unreachable */
+    if (tf) fclose(tf);
     return -1;
 }
