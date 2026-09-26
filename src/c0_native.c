@@ -30,37 +30,78 @@ static inline const char *arg_str(c0_value *args, int i) {
 }
 static inline void *arg_ptr(c0_value *args, int i) { return args[i].payload.p; }
 
+static char  *trace_out_buf = NULL;
+static size_t trace_out_len = 0;
+static size_t trace_out_cap = 0;
+
+void c0_trace_append_stdout(const char *str) {
+    if (!str) return;
+    size_t slen = strlen(str);
+    if (trace_out_len + slen + 1 > trace_out_cap) {
+        size_t new_cap = (trace_out_cap == 0) ? 1024 : trace_out_cap * 2;
+        while (new_cap < trace_out_len + slen + 1) new_cap *= 2;
+        char *p = (char *)realloc(trace_out_buf, new_cap);
+        if (!p) return;
+        trace_out_buf = p;
+        trace_out_cap = new_cap;
+    }
+    memcpy(trace_out_buf + trace_out_len, str, slen);
+    trace_out_len += slen;
+    trace_out_buf[trace_out_len] = '\0';
+}
+
+const char *c0_trace_get_stdout_snapshot(void) {
+    return trace_out_buf ? trace_out_buf : "";
+}
+
+void c0_trace_clear_stdout(void) {
+    trace_out_len = 0;
+    if (trace_out_buf) trace_out_buf[0] = '\0';
+}
+
 /* -----------------------------------------------------------------------
  * conio – console I/O
  * --------------------------------------------------------------------- */
 
 c0_value c0_print(c0_value *args) {
-    printf("%s", arg_str(args, 0));
+    const char *s = arg_str(args, 0);
+    printf("%s", s);
     fflush(stdout);
+    c0_trace_append_stdout(s);
     return c0_int(0);
 }
 
 c0_value c0_println(c0_value *args) {
-    printf("%s\n", arg_str(args, 0));
+    const char *s = arg_str(args, 0);
+    printf("%s\n", s);
     fflush(stdout);
+    c0_trace_append_stdout(s);
+    c0_trace_append_stdout("\n");
     return c0_int(0);
 }
 
 c0_value c0_printint(c0_value *args) {
-    printf("%d", arg_int(args, 0));
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%d", arg_int(args, 0));
+    printf("%s", buf);
     fflush(stdout);
+    c0_trace_append_stdout(buf);
     return c0_int(0);
 }
 
 c0_value c0_printbool(c0_value *args) {
-    printf("%s", arg_int(args, 0) ? "true" : "false");
+    const char *s = arg_int(args, 0) ? "true" : "false";
+    printf("%s", s);
     fflush(stdout);
+    c0_trace_append_stdout(s);
     return c0_int(0);
 }
 
 c0_value c0_printchar(c0_value *args) {
-    printf("%c", (char)arg_int(args, 0));
+    char buf[2] = { (char)arg_int(args, 0), '\0' };
+    printf("%s", buf);
     fflush(stdout);
+    c0_trace_append_stdout(buf);
     return c0_int(0);
 }
 
