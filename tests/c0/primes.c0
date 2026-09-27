@@ -1,0 +1,33 @@
+#use <conio>
+
+int is_prime(int n) {
+    if (n < 2) {
+        return 0;
+    }
+    int i = 2;
+    while (i * i <= n) {
+        if (n % i == 0) {
+            return 0;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+int count_primes(int limit) {
+    int count = 0;
+    int n = 2;
+    while (n <= limit) {
+        if (is_prime(n)) {
+            count = count + 1;
+        }
+        n = n + 1;
+    }
+    return count;
+}
+
+int main() {
+    printint(count_primes(100));
+    println("");
+    return 0;
+}
