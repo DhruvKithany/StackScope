@@ -1,0 +1,33 @@
+// primes.c0 - Sieve of Eratosthenes style prime check
+// Compile: python3 c0c.py examples/primes.c0
+// Run:     ./c0vm examples/primes.bc0
+
+#use <conio>
+
+int is_prime(int n) {
+    if (n < 2) {
+        return 0;
+    }
+    int i = 2;
+    while (i * i <= n) {
+        if (n % i == 0) {
+            return 0;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+int main() {
+    println("Prime numbers up to 50:");
+    int n = 2;
+    while (n <= 50) {
+        if (is_prime(n)) {
+            printint(n);
+            print(" ");
+        }
+        n = n + 1;
+    }
+    println("");
+    return 0;
+}

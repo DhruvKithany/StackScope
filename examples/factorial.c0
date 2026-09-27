@@ -1,0 +1,25 @@
+// factorial.c0 - Recursive factorial
+// Compile: python3 c0c.py examples/factorial.c0
+// Run:     ./c0vm examples/factorial.bc0
+
+#use <conio>
+
+int factorial(int n) {
+    if (n == 0) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+int main() {
+    println("Factorials:");
+    int i = 0;
+    while (i <= 10) {
+        printint(i);
+        print("! = ");
+        printint(factorial(i));
+        println("");
+        i = i + 1;
+    }
+    return 0;
+}

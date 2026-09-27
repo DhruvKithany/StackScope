@@ -1,0 +1,26 @@
+// fibonacci.c0 - Fibonacci sequence
+// Compile: python3 c0c.py examples/fibonacci.c0
+// Run:     ./c0vm examples/fibonacci.bc0
+
+#use <conio>
+
+int fib(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+int main() {
+    println("Fibonacci sequence:");
+    int i = 0;
+    while (i < 15) {
+        print("fib(");
+        printint(i);
+        print(") = ");
+        printint(fib(i));
+        println("");
+        i = i + 1;
+    }
+    return 0;
+}
