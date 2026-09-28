@@ -1,0 +1,445 @@
+{
+  "functions": [
+    {
+      "id": 0,
+      "name": "_c0_main",
+      "num_args": 0,
+      "num_vars": 1,
+      "code_length": 51,
+      "instructions": [
+        {"pc": 0, "mnemonic": "bipush 3"},
+        {"pc": 2, "mnemonic": "newarray elt_size=4"},
+        {"pc": 4, "mnemonic": "vstore V[0]"},
+        {"pc": 6, "mnemonic": "vload V[0]"},
+        {"pc": 8, "mnemonic": "bipush 0"},
+        {"pc": 10, "mnemonic": "aadds"},
+        {"pc": 11, "mnemonic": "bipush 10"},
+        {"pc": 13, "mnemonic": "imstore"},
+        {"pc": 14, "mnemonic": "vload V[0]"},
+        {"pc": 16, "mnemonic": "bipush 1"},
+        {"pc": 18, "mnemonic": "aadds"},
+        {"pc": 19, "mnemonic": "bipush 20"},
+        {"pc": 21, "mnemonic": "imstore"},
+        {"pc": 22, "mnemonic": "vload V[0]"},
+        {"pc": 24, "mnemonic": "bipush 2"},
+        {"pc": 26, "mnemonic": "aadds"},
+        {"pc": 27, "mnemonic": "bipush 30"},
+        {"pc": 29, "mnemonic": "imstore"},
+        {"pc": 30, "mnemonic": "vload V[0]"},
+        {"pc": 32, "mnemonic": "bipush 0"},
+        {"pc": 34, "mnemonic": "aadds"},
+        {"pc": 35, "mnemonic": "imload"},
+        {"pc": 36, "mnemonic": "vload V[0]"},
+        {"pc": 38, "mnemonic": "bipush 1"},
+        {"pc": 40, "mnemonic": "aadds"},
+        {"pc": 41, "mnemonic": "imload"},
+        {"pc": 42, "mnemonic": "iadd"},
+        {"pc": 43, "mnemonic": "vload V[0]"},
+        {"pc": 45, "mnemonic": "bipush 2"},
+        {"pc": 47, "mnemonic": "aadds"},
+        {"pc": 48, "mnemonic": "imload"},
+        {"pc": 49, "mnemonic": "iadd"},
+        {"pc": 50, "mnemonic": "return"}
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "step": 0,
+      "fn_id": 0,
+      "pc": 0,
+      "mnemonic": "bipush 3",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 0, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 1,
+      "fn_id": 0,
+      "pc": 2,
+      "mnemonic": "newarray elt_size=4",
+      "stack": [{"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 2, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 2,
+      "fn_id": 0,
+      "pc": 4,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 4, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [0, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 3,
+      "fn_id": 0,
+      "pc": 6,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 6, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [0, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 4,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "bipush 0",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [0, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 5,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "aadds",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}, {"type": "int", "val": 0}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [0, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 6,
+      "fn_id": 0,
+      "pc": 11,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA260"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 11, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [0, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 7,
+      "fn_id": 0,
+      "pc": 13,
+      "mnemonic": "imstore",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA260"}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 13, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [0, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 8,
+      "fn_id": 0,
+      "pc": 14,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 14, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 9,
+      "fn_id": 0,
+      "pc": 16,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 16, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 10,
+      "fn_id": 0,
+      "pc": 18,
+      "mnemonic": "aadds",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 18, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 11,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "bipush 20",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA264"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 12,
+      "fn_id": 0,
+      "pc": 21,
+      "mnemonic": "imstore",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA264"}, {"type": "int", "val": 20}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 21, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 0, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 13,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 14,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 2",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 15,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "aadds",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}, {"type": "int", "val": 2}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 16,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "bipush 30",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA268"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 17,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "imstore",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA268"}, {"type": "int", "val": 30}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 0]}],
+      "stdout": ""
+    },
+    {
+      "step": 18,
+      "fn_id": 0,
+      "pc": 30,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 30, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 19,
+      "fn_id": 0,
+      "pc": 32,
+      "mnemonic": "bipush 0",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 32, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 20,
+      "fn_id": 0,
+      "pc": 34,
+      "mnemonic": "aadds",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA040"}, {"type": "int", "val": 0}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 34, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 21,
+      "fn_id": 0,
+      "pc": 35,
+      "mnemonic": "imload",
+      "stack": [{"type": "ptr", "addr": "00000227E0FAA260"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 35, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 22,
+      "fn_id": 0,
+      "pc": 36,
+      "mnemonic": "vload V[0]",
+      "stack": [{"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 36, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 23,
+      "fn_id": 0,
+      "pc": 38,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 10}, {"type": "ptr", "addr": "00000227E0FAA040"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 38, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 24,
+      "fn_id": 0,
+      "pc": 40,
+      "mnemonic": "aadds",
+      "stack": [{"type": "int", "val": 10}, {"type": "ptr", "addr": "00000227E0FAA040"}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 40, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 25,
+      "fn_id": 0,
+      "pc": 41,
+      "mnemonic": "imload",
+      "stack": [{"type": "int", "val": 10}, {"type": "ptr", "addr": "00000227E0FAA264"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 41, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 26,
+      "fn_id": 0,
+      "pc": 42,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 10}, {"type": "int", "val": 20}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 42, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 27,
+      "fn_id": 0,
+      "pc": 43,
+      "mnemonic": "vload V[0]",
+      "stack": [{"type": "int", "val": 30}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 43, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 28,
+      "fn_id": 0,
+      "pc": 45,
+      "mnemonic": "bipush 2",
+      "stack": [{"type": "int", "val": 30}, {"type": "ptr", "addr": "00000227E0FAA040"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 45, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 29,
+      "fn_id": 0,
+      "pc": 47,
+      "mnemonic": "aadds",
+      "stack": [{"type": "int", "val": 30}, {"type": "ptr", "addr": "00000227E0FAA040"}, {"type": "int", "val": 2}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 47, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 30,
+      "fn_id": 0,
+      "pc": 48,
+      "mnemonic": "imload",
+      "stack": [{"type": "int", "val": 30}, {"type": "ptr", "addr": "00000227E0FAA268"}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 48, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 31,
+      "fn_id": 0,
+      "pc": 49,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 30}, {"type": "int", "val": 30}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 49, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    },
+    {
+      "step": 32,
+      "fn_id": 0,
+      "pc": 50,
+      "mnemonic": "return",
+      "stack": [{"type": "int", "val": 60}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 50, "locals": [{"type": "ptr", "addr": "00000227E0FAA040"}]}
+      ],
+      "heap": [{"kind": "array", "addr": "00000227E0FAA040", "count": 3, "elt_size": 4, "elements": [10, 20, 30]}],
+      "stdout": ""
+    }
+  ],
+  "return_value": 60
+}

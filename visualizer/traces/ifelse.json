@@ -1,0 +1,83 @@
+{
+  "functions": [
+    {
+      "id": 0,
+      "name": "_c0_main",
+      "num_args": 0,
+      "num_vars": 0,
+      "code_length": 13,
+      "instructions": [
+        {"pc": 0, "mnemonic": "bipush 3"},
+        {"pc": 2, "mnemonic": "bipush 5"},
+        {"pc": 4, "mnemonic": "if_icmplt 6 (target: 000a)"},
+        {"pc": 7, "mnemonic": "bipush 0"},
+        {"pc": 9, "mnemonic": "return"},
+        {"pc": 10, "mnemonic": "bipush 1"},
+        {"pc": 12, "mnemonic": "return"}
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "step": 0,
+      "fn_id": 0,
+      "pc": 0,
+      "mnemonic": "bipush 3",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 0, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 1,
+      "fn_id": 0,
+      "pc": 2,
+      "mnemonic": "bipush 5",
+      "stack": [{"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 2, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 2,
+      "fn_id": 0,
+      "pc": 4,
+      "mnemonic": "if_icmplt 6 (target: 000a)",
+      "stack": [{"type": "int", "val": 3}, {"type": "int", "val": 5}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 4, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 3,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 1",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 4,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "return",
+      "stack": [{"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    }
+  ],
+  "return_value": 1
+}

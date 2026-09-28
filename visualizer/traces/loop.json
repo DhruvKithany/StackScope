@@ -1,0 +1,1582 @@
+{
+  "functions": [
+    {
+      "id": 0,
+      "name": "_c0_main",
+      "num_args": 0,
+      "num_vars": 2,
+      "code_length": 35,
+      "instructions": [
+        {"pc": 0, "mnemonic": "bipush 0"},
+        {"pc": 2, "mnemonic": "vstore V[0]"},
+        {"pc": 4, "mnemonic": "bipush 1"},
+        {"pc": 6, "mnemonic": "vstore V[1]"},
+        {"pc": 8, "mnemonic": "vload V[1]"},
+        {"pc": 10, "mnemonic": "bipush 10"},
+        {"pc": 12, "mnemonic": "if_icmpgt 20 (target: 0020)"},
+        {"pc": 15, "mnemonic": "vload V[0]"},
+        {"pc": 17, "mnemonic": "vload V[1]"},
+        {"pc": 19, "mnemonic": "iadd"},
+        {"pc": 20, "mnemonic": "vstore V[0]"},
+        {"pc": 22, "mnemonic": "vload V[1]"},
+        {"pc": 24, "mnemonic": "bipush 1"},
+        {"pc": 26, "mnemonic": "iadd"},
+        {"pc": 27, "mnemonic": "vstore V[1]"},
+        {"pc": 29, "mnemonic": "goto -21 (target: 0008)"},
+        {"pc": 32, "mnemonic": "vload V[0]"},
+        {"pc": 34, "mnemonic": "return"}
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "step": 0,
+      "fn_id": 0,
+      "pc": 0,
+      "mnemonic": "bipush 0",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 0, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 1,
+      "fn_id": 0,
+      "pc": 2,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 0}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 2, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 2,
+      "fn_id": 0,
+      "pc": 4,
+      "mnemonic": "bipush 1",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 4, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 3,
+      "fn_id": 0,
+      "pc": 6,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 6, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 0}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 4,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 5,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 6,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 1}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 7,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 8,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 0}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 9,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 0}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 10,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 0}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 11,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 12,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 13,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 1}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 14,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 2}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 1}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 15,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 16,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 17,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 2}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 18,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 2}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 19,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 20,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 21,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 1}, {"type": "int", "val": 2}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 22,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 1}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 23,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 24,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 2}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 25,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 2}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 26,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 2}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 27,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 28,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 29,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 30,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 3}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 31,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 32,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 33,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 3}, {"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 34,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 6}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 3}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 35,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 36,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 3}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 37,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 3}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 38,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 4}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 3}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 39,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 40,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 41,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 4}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 42,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 4}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 43,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 44,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 6}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 45,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 6}, {"type": "int", "val": 4}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 46,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 6}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 47,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 48,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 4}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 49,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 4}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 50,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 5}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 4}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 51,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 52,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 53,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 5}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 54,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 5}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 55,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 56,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 57,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 10}, {"type": "int", "val": 5}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 58,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 15}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 10}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 59,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 60,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 5}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 61,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 5}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 62,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 6}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 5}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 63,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 64,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 65,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 6}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 66,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 6}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 67,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 68,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 15}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 69,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 15}, {"type": "int", "val": 6}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 70,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 21}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 15}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 71,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 72,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 6}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 73,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 6}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 74,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 7}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 6}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 75,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 76,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 77,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 7}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 78,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 7}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 79,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 80,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 21}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 81,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 21}, {"type": "int", "val": 7}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 82,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 28}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 21}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 83,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 84,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 7}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 85,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 7}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 86,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 8}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 7}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 87,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 88,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 89,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 8}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 90,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 8}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 91,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 92,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 28}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 93,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 28}, {"type": "int", "val": 8}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 94,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 36}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 28}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 95,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 96,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 8}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 97,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 8}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 98,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 9}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 8}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 99,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 100,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 101,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 9}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 102,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 9}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 103,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 104,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 36}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 105,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 36}, {"type": "int", "val": 9}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 106,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 45}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 36}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 107,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 108,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 9}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 109,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 9}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 110,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 9}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 111,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 112,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 113,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 114,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 10}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 115,
+      "fn_id": 0,
+      "pc": 15,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 15, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 116,
+      "fn_id": 0,
+      "pc": 17,
+      "mnemonic": "vload V[1]",
+      "stack": [{"type": "int", "val": 45}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 17, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 117,
+      "fn_id": 0,
+      "pc": 19,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 45}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 19, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 118,
+      "fn_id": 0,
+      "pc": 20,
+      "mnemonic": "vstore V[0]",
+      "stack": [{"type": "int", "val": 55}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 20, "locals": [{"type": "int", "val": 45}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 119,
+      "fn_id": 0,
+      "pc": 22,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 22, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 120,
+      "fn_id": 0,
+      "pc": 24,
+      "mnemonic": "bipush 1",
+      "stack": [{"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 24, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 121,
+      "fn_id": 0,
+      "pc": 26,
+      "mnemonic": "iadd",
+      "stack": [{"type": "int", "val": 10}, {"type": "int", "val": 1}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 26, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 122,
+      "fn_id": 0,
+      "pc": 27,
+      "mnemonic": "vstore V[1]",
+      "stack": [{"type": "int", "val": 11}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 27, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 10}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 123,
+      "fn_id": 0,
+      "pc": 29,
+      "mnemonic": "goto -21 (target: 0008)",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 29, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 11}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 124,
+      "fn_id": 0,
+      "pc": 8,
+      "mnemonic": "vload V[1]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 8, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 11}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 125,
+      "fn_id": 0,
+      "pc": 10,
+      "mnemonic": "bipush 10",
+      "stack": [{"type": "int", "val": 11}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 10, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 11}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 126,
+      "fn_id": 0,
+      "pc": 12,
+      "mnemonic": "if_icmpgt 20 (target: 0020)",
+      "stack": [{"type": "int", "val": 11}, {"type": "int", "val": 10}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 12, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 11}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 127,
+      "fn_id": 0,
+      "pc": 32,
+      "mnemonic": "vload V[0]",
+      "stack": [],
+      "call_stack": [
+        {"fn_id": 0, "pc": 32, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 11}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    },
+    {
+      "step": 128,
+      "fn_id": 0,
+      "pc": 34,
+      "mnemonic": "return",
+      "stack": [{"type": "int", "val": 55}],
+      "call_stack": [
+        {"fn_id": 0, "pc": 34, "locals": [{"type": "int", "val": 55}, {"type": "int", "val": 11}]}
+      ],
+      "heap": [],
+      "stdout": ""
+    }
+  ],
+  "return_value": 55
+}
