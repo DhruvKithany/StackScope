@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C0 Virtual Machine — Execution Visualizer</title>
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-panel: #161b22;
+      --bg-panel-header: #21262d;
+      --border-color: #30363d;
+      --text-main: #c9d1d9;
+      --text-dim: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-purple: #bc8cff;
+      --accent-orange: #d29922;
+      --accent-red: #f85149;
+      --highlight-pc: rgba(56, 139, 253, 0.25);
+      --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-panel-header);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #1f6feb, #8957e5);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    select, button, input[type="file"] {
+      background: var(--bg-panel);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    select:hover, button:hover {
+      border-color: var(--accent-blue);
+      background: #1f242c;
+    }
+
+    button.primary {
+      background: #238636;
+      border-color: #2ea043;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    button.primary:hover {
+      background: #2ea043;
+    }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #21262d;
+      border: 1px solid var(--border-color);
+    }
+    .status-badge.running { color: var(--accent-blue); border-color: var(--accent-blue); }
+    .status-badge.done { color: var(--accent-green); border-color: var(--accent-green); }
+
+    /* Main Grid */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 320px 1fr 340px;
+      gap: 12px;
+      padding: 12px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel-header {
+      background: var(--bg-panel-header);
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-body {
+      padding: 10px;
+      overflow-y: auto;
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    /* Left Panel: Bytecode */
+    .fn-selector-bar {
+      padding: 6px 10px;
+      background: #191f28;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+    }
+    .fn-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      padding: 3px 8px;
+      font-size: 0.78rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .fn-tab.active {
+      color: var(--accent-blue);
+      border-color: var(--border-color);
+      background: var(--bg-panel);
+      font-weight: 600;
+    }
+
+    .ins-line {
+      display: flex;
+      align-items: center;
+      padding: 3px 6px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      transition: background 0.1s ease;
+      cursor: default;
+    }
+    .ins-line:hover {
+      background: rgba(255,255,255,0.03);
+    }
+    .ins-line.active {
+      background: var(--highlight-pc);
+      border-left: 3px solid var(--accent-blue);
+      font-weight: 700;
+      color: #fff;
+    }
+    .ins-pc {
+      color: var(--text-dim);
+      width: 48px;
+      font-size: 0.75rem;
+    }
+    .ins-mnemonic {
+      color: var(--text-main);
+    }
+    .ins-line.active .ins-mnemonic {
+      color: var(--accent-blue);
+    }
+
+    /* Center Panel: Stacks */
+    .center-split {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .stack-container {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 6px;
+      padding: 4px;
+      min-height: 100%;
+      justify-content: flex-start;
+    }
+
+    .stack-item {
+      background: #1c2128;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .stack-item.top {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 10px rgba(63, 185, 80, 0.2);
+    }
+    .stack-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .stack-badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .badge-int { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    .badge-ptr { background: rgba(188, 140, 255, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
+
+    /* Call Frames */
+    .frame-card {
+      background: #1c2128;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .frame-card.top {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 10px rgba(188, 140, 255, 0.15);
+    }
+    .frame-header {
+      background: #22272e;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-purple);
+      display: flex;
+      justify-content: space-between;
+    }
+    .frame-body {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+    }
+    .locals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .local-cell {
+      background: #161b22;
+      border: 1px solid var(--border-color);
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+    .local-idx {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+    .local-val {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Right Panel: Heap & Console */
+    .right-split {
+      display: grid;
+      grid-template-rows: 1fr 140px;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .heap-item {
+      background: #1c2128;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+    .heap-item-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-orange);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .heap-elements {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .heap-cell {
+      background: #161b22;
+      border: 1px solid var(--border-color);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .heap-cell-idx {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      margin-right: 4px;
+    }
+
+    .console-box {
+      background: #000;
+      color: #3fb950;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      white-space: pre-wrap;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    /* Footer Player Controls */
+    footer {
+      background: var(--bg-panel-header);
+      border-top: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .scrubber {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border-color);
+      outline: none;
+    }
+    .scrubber::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .step-display {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .empty-hint {
+      color: var(--text-dim);
+      font-style: italic;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>C0VM</span>
+      <span class="brand-badge">Visualizer</span>
+    </div>
+
+    <div class="header-controls">
+      <label style="font-size: 0.8rem; color: var(--text-dim);">Demo:</label>
+      <select id="demoSelect">
+        <option value="factorial">Recursive Factorial (factorial(5))</option>
+        <option value="array_heap">Dynamic Arrays on Heap</option>
+        <option value="collatz">Collatz 3n+1 Loop</option>
+        <option value="loop">Loop Summation (1..10)</option>
+        <option value="ifelse">Conditional Branching</option>
+      </select>
+
+      <button id="uploadBtn">Upload trace.json</button>
+      <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+      <span class="status-badge" id="statusBadge">Ready</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left: Bytecode & Instructions -->
+    <section class="panel">
+      <div class="panel-header">
+        <span>Bytecode Listing</span>
+        <span id="currentFnLabel" style="color: var(--accent-blue);">_c0_main</span>
+      </div>
+      <div class="fn-selector-bar" id="fnTabs"></div>
+      <div class="panel-body" id="bytecodeListing"></div>
+    </section>
+
+    <!-- Center: Operand Stack & Call Stack -->
+    <div class="center-split">
+      <section class="panel">
+        <div class="panel-header">
+          <span>Operand Stack (S)</span>
+          <span id="stackSizeLabel" style="font-size: 0.75rem;">0 items</span>
+        </div>
+        <div class="panel-body stack-container" id="operandStack">
+          <div class="empty-hint">Stack is empty</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span>Call Stack (Frames & Locals V)</span>
+          <span id="callDepthLabel" style="font-size: 0.75rem;">Depth: 1</span>
+        </div>
+        <div class="panel-body" id="callStack"></div>
+      </section>
+    </div>
+
+    <!-- Right: Heap & Console Output -->
+    <div class="right-split">
+      <section class="panel">
+        <div class="panel-header">
+          <span>Heap Objects</span>
+          <span id="heapCountLabel" style="font-size: 0.75rem;">0 objects</span>
+        </div>
+        <div class="panel-body" id="heapContainer">
+          <div class="empty-hint">No heap objects allocated</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <span>Console Output</span>
+        </div>
+        <div class="panel-body" style="padding: 0;">
+          <div class="console-box" id="consoleOutput"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="btn-group">
+      <button id="btnReset" title="Reset to start">|&lt;&lt;</button>
+      <button id="btnPrev" title="Step backward (&larr;)">&lt;</button>
+      <button id="btnPlay" class="primary" title="Play / Pause (Space)">Play</button>
+      <button id="btnNext" title="Step forward (&rarr;)">&gt;</button>
+      <button id="btnEnd" title="Jump to end">&gt;&gt;|</button>
+    </div>
+
+    <input type="range" class="scrubber" id="scrubber" min="0" max="0" value="0">
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <label style="font-size: 0.75rem; color: var(--text-dim);">Speed:</label>
+      <select id="speedSelect" style="padding: 4px 8px; font-size: 0.75rem;">
+        <option value="500">0.5x</option>
+        <option value="200" selected>1x</option>
+        <option value="80">2x</option>
+        <option value="25">5x</option>
+      </select>
+    </div>
+
+    <div class="step-display" id="stepDisplay">Step 0 / 0</div>
+  </footer>
+
+  <!-- Preloaded Demos -->
+  <script src="demos.js"></script>
+
+  <script>
+    // State
+    let currentTrace = null;
+    let currentStepIdx = 0;
+    let isPlaying = false;
+    let playInterval = null;
+    let activeTabFnId = 0;
+
+    // Elements
+    const demoSelect = document.getElementById('demoSelect');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('fileInput');
+    const statusBadge = document.getElementById('statusBadge');
+    const fnTabs = document.getElementById('fnTabs');
+    const bytecodeListing = document.getElementById('bytecodeListing');
+    const operandStack = document.getElementById('operandStack');
+    const callStack = document.getElementById('callStack');
+    const heapContainer = document.getElementById('heapContainer');
+    const consoleOutput = document.getElementById('consoleOutput');
+    const currentFnLabel = document.getElementById('currentFnLabel');
+    const stackSizeLabel = document.getElementById('stackSizeLabel');
+    const callDepthLabel = document.getElementById('callDepthLabel');
+    const heapCountLabel = document.getElementById('heapCountLabel');
+
+    const btnReset = document.getElementById('btnReset');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnNext = document.getElementById('btnNext');
+    const btnEnd = document.getElementById('btnEnd');
+    const scrubber = document.getElementById('scrubber');
+    const speedSelect = document.getElementById('speedSelect');
+    const stepDisplay = document.getElementById('stepDisplay');
+
+    // Load initial demo
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.PRELOADED_DEMOS && window.PRELOADED_DEMOS['factorial']) {
+        loadTraceData(window.PRELOADED_DEMOS['factorial']);
+      }
+    });
+
+    demoSelect.addEventListener('change', (e) => {
+      pause();
+      const demoKey = e.target.value;
+      if (window.PRELOADED_DEMOS && window.PRELOADED_DEMOS[demoKey]) {
+        loadTraceData(window.PRELOADED_DEMOS[demoKey]);
+      }
+    });
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          loadTraceData(data);
+          statusBadge.textContent = 'Custom Trace Loaded';
+        } catch (err) {
+          alert('Invalid trace JSON file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function loadTraceData(data) {
+      currentTrace = data;
+      currentStepIdx = 0;
+      activeTabFnId = 0;
+
+      scrubber.min = 0;
+      scrubber.max = (data.steps ? data.steps.length - 1 : 0);
+      scrubber.value = 0;
+
+      renderFunctionTabs();
+      renderStep(0);
+    }
+
+    function renderFunctionTabs() {
+      fnTabs.innerHTML = '';
+      if (!currentTrace || !currentTrace.functions) return;
+
+      currentTrace.functions.forEach(fn => {
+        const btn = document.createElement('button');
+        btn.className = `fn-tab ${fn.id === activeTabFnId ? 'active' : ''}`;
+        btn.textContent = `${fn.name || 'fn_' + fn.id} (${fn.id})`;
+        btn.onclick = () => {
+          activeTabFnId = fn.id;
+          renderFunctionTabs();
+          renderBytecode();
+        };
+        fnTabs.appendChild(btn);
+      });
+    }
+
+    function renderBytecode() {
+      bytecodeListing.innerHTML = '';
+      if (!currentTrace || !currentTrace.functions) return;
+
+      const fn = currentTrace.functions.find(f => f.id === activeTabFnId);
+      if (!fn) return;
+
+      currentFnLabel.textContent = `${fn.name || 'fn_' + fn.id} (args: ${fn.num_args}, vars: ${fn.num_vars})`;
+
+      const step = (currentTrace.steps && currentTrace.steps[currentStepIdx]) || null;
+      const isCurrentExecutingFn = (step && step.fn_id === activeTabFnId);
+
+      fn.instructions.forEach(ins => {
+        const div = document.createElement('div');
+        const isActive = isCurrentExecutingFn && (step.pc === ins.pc);
+        div.className = `ins-line ${isActive ? 'active' : ''}`;
+        div.innerHTML = `
+          <span class="ins-pc">0x${ins.pc.toString(16).padStart(4, '0')}</span>
+          <span class="ins-mnemonic">${ins.mnemonic}</span>
+        `;
+        if (isActive) {
+          setTimeout(() => div.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 10);
+        }
+        bytecodeListing.appendChild(div);
+      });
+    }
+
+    function renderStep(idx) {
+      if (!currentTrace || !currentTrace.steps || !currentTrace.steps[idx]) return;
+      currentStepIdx = idx;
+      const step = currentTrace.steps[idx];
+
+      // Auto-switch function tab if needed
+      if (step.fn_id !== activeTabFnId) {
+        activeTabFnId = step.fn_id;
+        renderFunctionTabs();
+      }
+      renderBytecode();
+
+      // Update Scrubber & Display
+      scrubber.value = idx;
+      stepDisplay.textContent = `Step ${idx} / ${currentTrace.steps.length - 1}`;
+
+      // Status
+      if (idx === currentTrace.steps.length - 1) {
+        statusBadge.textContent = `Finished (Ret: ${currentTrace.return_value})`;
+        statusBadge.className = 'status-badge done';
+      } else {
+        statusBadge.textContent = step.mnemonic;
+        statusBadge.className = 'status-badge running';
+      }
+
+      // Operand Stack
+      operandStack.innerHTML = '';
+      if (step.stack && step.stack.length > 0) {
+        step.stack.forEach((item, sIdx) => {
+          const div = document.createElement('div');
+          const isTop = (sIdx === step.stack.length - 1);
+          div.className = `stack-item ${isTop ? 'top' : ''}`;
+          div.innerHTML = `
+            <span class="stack-val">${item.type === 'int' ? item.val : item.addr}</span>
+            <span class="stack-badge ${item.type === 'int' ? 'badge-int' : 'badge-ptr'}">${item.type}</span>
+          `;
+          operandStack.appendChild(div);
+        });
+        stackSizeLabel.textContent = `${step.stack.length} item${step.stack.length > 1 ? 's' : ''}`;
+      } else {
+        operandStack.innerHTML = '<div class="empty-hint">Stack is empty</div>';
+        stackSizeLabel.textContent = '0 items';
+      }
+
+      // Call Stack
+      callStack.innerHTML = '';
+      if (step.call_stack) {
+        callDepthLabel.textContent = `Depth: ${step.call_stack.length}`;
+        [...step.call_stack].reverse().forEach((frame, fIdx) => {
+          const isTop = (fIdx === 0);
+          const fnObj = currentTrace.functions.find(f => f.id === frame.fn_id);
+          const fnName = fnObj ? fnObj.name : `fn_${frame.fn_id}`;
+
+          const div = document.createElement('div');
+          div.className = `frame-card ${isTop ? 'top' : ''}`;
+
+          let localsHtml = '';
+          if (frame.locals && frame.locals.length > 0) {
+            frame.locals.forEach((v, vIdx) => {
+              localsHtml += `
+                <div class="local-cell">
+                  <div class="local-idx">V[${vIdx}] (${v.type})</div>
+                  <div class="local-val">${v.type === 'int' ? v.val : v.addr}</div>
+                </div>
+              `;
+            });
+          }
+
+          div.innerHTML = `
+            <div class="frame-header">
+              <span>${fnName}</span>
+              <span>PC: 0x${frame.pc.toString(16).padStart(4, '0')}</span>
+            </div>
+            <div class="frame-body">
+              <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 2px;">Local Variables:</div>
+              <div class="locals-grid">${localsHtml}</div>
+            </div>
+          `;
+          callStack.appendChild(div);
+        });
+      }
+
+      // Heap Objects
+      heapContainer.innerHTML = '';
+      if (step.heap && step.heap.length > 0) {
+        heapCountLabel.textContent = `${step.heap.length} object${step.heap.length > 1 ? 's' : ''}`;
+        step.heap.forEach((obj, hIdx) => {
+          const div = document.createElement('div');
+          div.className = 'heap-item';
+
+          let bodyHtml = '';
+          if (obj.kind === 'array') {
+            let cells = '';
+            if (obj.elements) {
+              obj.elements.forEach((el, elIdx) => {
+                cells += `<span class="heap-cell"><span class="heap-cell-idx">[${elIdx}]</span>${el}</span>`;
+              });
+            }
+            bodyHtml = `<div class="heap-elements">${cells}</div>`;
+          } else {
+            bodyHtml = `<div style="font-size: 0.75rem; color: var(--text-dim);">Struct memory block (${obj.size} bytes)</div>`;
+          }
+
+          div.innerHTML = `
+            <div class="heap-item-header">
+              <span>${obj.kind.toUpperCase()} @ ${obj.addr}</span>
+              <span>${obj.count ? obj.count + ' elts' : obj.size + ' B'}</span>
+            </div>
+            ${bodyHtml}
+          `;
+          heapContainer.appendChild(div);
+        });
+      } else {
+        heapCountLabel.textContent = '0 objects';
+        heapContainer.innerHTML = '<div class="empty-hint">No heap objects allocated</div>';
+      }
+
+      // Console
+      consoleOutput.textContent = step.stdout || '';
+    }
+
+    // Controls
+    function play() {
+      if (!currentTrace || isPlaying) return;
+      isPlaying = true;
+      btnPlay.textContent = 'Pause';
+      btnPlay.classList.remove('primary');
+
+      const speed = parseInt(speedSelect.value, 10);
+      playInterval = setInterval(() => {
+        if (currentStepIdx < currentTrace.steps.length - 1) {
+          renderStep(currentStepIdx + 1);
+        } else {
+          pause();
+        }
+      }, speed);
+    }
+
+    function pause() {
+      isPlaying = false;
+      btnPlay.textContent = 'Play';
+      btnPlay.classList.add('primary');
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+      }
+    }
+
+    btnPlay.addEventListener('click', () => {
+      if (isPlaying) pause();
+      else play();
+    });
+
+    btnNext.addEventListener('click', () => {
+      pause();
+      if (currentTrace && currentStepIdx < currentTrace.steps.length - 1) {
+        renderStep(currentStepIdx + 1);
+      }
+    });
+
+    btnPrev.addEventListener('click', () => {
+      pause();
+      if (currentTrace && currentStepIdx > 0) {
+        renderStep(currentStepIdx - 1);
+      }
+    });
+
+    btnReset.addEventListener('click', () => {
+      pause();
+      renderStep(0);
+    });
+
+    btnEnd.addEventListener('click', () => {
+      pause();
+      if (currentTrace) renderStep(currentTrace.steps.length - 1);
+    });
+
+    scrubber.addEventListener('input', (e) => {
+      pause();
+      renderStep(parseInt(e.target.value, 10));
+    });
+
+    speedSelect.addEventListener('change', () => {
+      if (isPlaying) {
+        pause();
+        play();
+      }
+    });
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (isPlaying) pause(); else play();
+      } else if (e.code === 'ArrowRight') {
+        btnNext.click();
+      } else if (e.code === 'ArrowLeft') {
+        btnPrev.click();
+      } else if (e.code === 'KeyR') {
+        btnReset.click();
+      }
+    });
+  </script>
+</body>
+</html>
