@@ -3,206 +3,244 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>C0 Virtual Machine — Interactive Systems Visualizer</title>
+  <title>C0 Virtual Machine — Execution & Systems Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #0d1117;
-      --bg-panel: #161b22;
-      --bg-panel-header: #21262d;
-      --border-color: #30363d;
-      --text-main: #c9d1d9;
-      --text-dim: #8b949e;
-      --accent-blue: #58a6ff;
-      --accent-green: #3fb950;
-      --accent-purple: #bc8cff;
-      --accent-orange: #d29922;
-      --accent-red: #f85149;
-      --highlight-pc: rgba(56, 139, 253, 0.22);
-      --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      --bg-canvas: #09090b;
+      --bg-panel: #121215;
+      --bg-panel-header: #18181b;
+      --bg-hover: #1f1f23;
+      --border-subtle: #27272a;
+      --border-strong: #3f3f46;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      
+      /* High-contrast functional accents */
+      --accent-signal: #ff4d00;      /* Safety Blaze Orange */
+      --accent-cyan: #06b6d4;        /* Signal Cyan */
+      --accent-amber: #f59e0b;       /* Memory Address Amber */
+      --accent-emerald: #10b981;     /* Verified Execution Emerald */
+      
+      --font-mono: 'Geist Mono', monospace;
+      --font-sans: 'Geist', -apple-system, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: var(--bg-dark);
-      color: var(--text-main);
+      background: var(--bg-canvas);
+      color: var(--text-primary);
       font-family: var(--font-sans);
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Header */
+    /* Top Control Bar */
     header {
       background: var(--bg-panel-header);
-      border-bottom: 1px solid var(--border-color);
-      padding: 10px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 15px;
-      flex-wrap: wrap;
+      gap: 12px;
+      flex-shrink: 0;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+    }
+
+    .brand-title {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
       font-weight: 700;
-      font-size: 1.05rem;
       letter-spacing: 0.5px;
+      color: var(--text-primary);
     }
 
     .brand-badge {
-      background: linear-gradient(135deg, #1f6feb, #8957e5);
-      color: #fff;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 800;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--accent-signal);
+      border: 1px solid var(--accent-signal);
+      padding: 1px 5px;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .header-controls {
+    .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    select, button, input[type="file"] {
+    select, button {
       background: var(--bg-panel);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 0.85rem;
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      padding: 5px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: border-color 0.1s ease, background 0.1s ease;
     }
 
     select:hover, button:hover {
-      border-color: var(--accent-blue);
-      background: #1f242c;
+      border-color: var(--border-strong);
+      background: var(--bg-hover);
     }
 
-    button.primary {
-      background: #238636;
-      border-color: #2ea043;
-      color: #fff;
+    select:focus, button:focus {
+      outline: none;
+      border-color: var(--accent-signal);
+    }
+
+    button.btn-accent {
+      background: var(--accent-signal);
+      border-color: var(--accent-signal);
+      color: #000;
+      font-weight: 700;
+    }
+
+    button.btn-accent:hover {
+      background: #ff6422;
+      border-color: #ff6422;
+    }
+
+    .telemetry-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
       font-weight: 600;
+      padding: 3px 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-canvas);
+      color: var(--text-secondary);
+      border-radius: 2px;
     }
 
-    button.primary:hover {
-      background: #2ea043;
+    .telemetry-tag.active {
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
     }
 
-    .status-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      background: #21262d;
-      border: 1px solid var(--border-color);
+    .telemetry-tag.finished {
+      color: var(--accent-emerald);
+      border-color: var(--accent-emerald);
     }
-    .status-badge.running { color: var(--accent-blue); border-color: var(--accent-blue); }
-    .status-badge.done { color: var(--accent-green); border-color: var(--accent-green); }
 
-    /* Teacher's Under-The-Hood Walkthrough Console */
-    .teacher-panel {
-      background: linear-gradient(135deg, #13171f 0%, #1a2230 100%);
-      border-bottom: 1px solid var(--border-color);
-      padding: 10px 20px;
+    /* Execution Mechanics Console (Pedagogical Narrative) */
+    .mechanics-strip {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 10px 16px;
       display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
+      grid-template-columns: 1fr 340px;
       gap: 16px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    }
-
-    .teacher-badge {
-      display: flex;
       align-items: center;
-      gap: 10px;
-      background: rgba(188, 140, 255, 0.1);
-      border: 1px solid rgba(188, 140, 255, 0.3);
-      padding: 6px 12px;
-      border-radius: 8px;
+      flex-shrink: 0;
+      border-left: 3px solid var(--accent-signal);
     }
 
-    .teacher-content {
+    .mechanics-main {
       display: flex;
       flex-direction: column;
       gap: 4px;
       overflow: hidden;
     }
 
-    .teacher-headline {
+    .mechanics-headline {
       display: flex;
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
     }
 
-    .teacher-title {
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: #fff;
+    .mechanics-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-primary);
       letter-spacing: -0.2px;
     }
 
-    .teacher-opcode {
+    .mechanics-transition {
       font-family: var(--font-mono);
-      font-size: 0.76rem;
-      font-weight: 700;
-      color: var(--accent-blue);
-      background: rgba(88, 166, 255, 0.12);
-      border: 1px solid rgba(88, 166, 255, 0.3);
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-
-    .teacher-narrative {
-      font-size: 0.84rem;
-      line-height: 1.45;
-      color: var(--text-dim);
-    }
-
-    .teacher-narrative strong {
-      color: var(--text-main);
-    }
-
-    .teacher-callout {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(210, 153, 34, 0.12);
-      border: 1px solid rgba(210, 153, 34, 0.4);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      color: var(--accent-orange);
-      max-width: 320px;
-      white-space: normal;
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      background: rgba(6, 182, 212, 0.08);
+      padding: 1px 6px;
+      border-radius: 2px;
     }
 
-    /* Main Grid */
+    .mechanics-desc {
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: var(--text-secondary);
+    }
+
+    .mechanics-desc strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .mechanics-desc code {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: var(--bg-canvas);
+      padding: 1px 4px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      color: var(--accent-amber);
+    }
+
+    .mechanics-callout {
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-canvas);
+      padding: 8px 12px;
+      border-radius: 2px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      line-height: 1.35;
+      color: var(--accent-amber);
+    }
+
+    .mechanics-callout-header {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    /* Main Execution Grid */
     main {
       flex: 1;
       display: grid;
-      grid-template-columns: 320px 1fr 340px;
-      gap: 12px;
-      padding: 12px;
-      overflow: hidden;
+      grid-template-columns: 290px 1fr 340px;
+      gap: 8px;
+      padding: 8px 16px;
       min-height: 0;
     }
 
     .panel {
       background: var(--bg-panel);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -211,466 +249,492 @@
 
     .panel-header {
       background: var(--bg-panel-header);
-      padding: 8px 14px;
-      font-size: 0.8rem;
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-dim);
-      border-bottom: 1px solid var(--border-color);
+      letter-spacing: 0.6px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
+    }
+
+    .panel-header-sub {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--text-muted);
     }
 
     .panel-body {
-      padding: 10px;
+      padding: 8px;
       overflow-y: auto;
       flex: 1;
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
 
-    /* Left Panel: Bytecode */
-    .fn-selector-bar {
-      padding: 6px 10px;
-      background: #191f28;
-      border-bottom: 1px solid var(--border-color);
+    /* Disassembly Listing */
+    .fn-tabs-bar {
+      padding: 4px 8px;
+      background: var(--bg-canvas);
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
-      gap: 6px;
+      gap: 4px;
       overflow-x: auto;
+      flex-shrink: 0;
     }
-    .fn-tab {
+
+    .fn-tab-btn {
       background: transparent;
       border: 1px solid transparent;
-      color: var(--text-dim);
-      padding: 3px 8px;
-      font-size: 0.78rem;
-      border-radius: 4px;
+      color: var(--text-muted);
+      padding: 2px 6px;
+      font-size: 0.72rem;
+      border-radius: 2px;
       cursor: pointer;
     }
-    .fn-tab.active {
-      color: var(--accent-blue);
-      border-color: var(--border-color);
+
+    .fn-tab-btn.active {
+      color: var(--text-primary);
+      border-color: var(--border-strong);
       background: var(--bg-panel);
       font-weight: 600;
     }
 
-    .ins-line {
+    .asm-row {
       display: flex;
       align-items: center;
-      padding: 3px 6px;
-      border-radius: 4px;
-      margin-bottom: 2px;
-      transition: background 0.1s ease;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+      border-radius: 2px;
+      border-left: 2px solid transparent;
       cursor: default;
     }
-    .ins-line:hover {
-      background: rgba(255,255,255,0.03);
-    }
-    .ins-line.active {
-      background: var(--highlight-pc);
-      border-left: 3px solid var(--accent-blue);
-      font-weight: 700;
-      color: #fff;
-    }
-    .ins-pc {
-      color: var(--text-dim);
-      width: 48px;
-      font-size: 0.75rem;
-    }
-    .ins-mnemonic {
-      color: var(--text-main);
-    }
-    .ins-line.active .ins-mnemonic {
-      color: var(--accent-blue);
+
+    .asm-row:hover {
+      background: var(--bg-hover);
     }
 
-    /* Center Panel: Stacks */
+    .asm-row.active {
+      background: rgba(255, 77, 0, 0.12);
+      border-left-color: var(--accent-signal);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .asm-pc {
+      color: var(--text-muted);
+      width: 44px;
+      font-size: 0.72rem;
+    }
+
+    .asm-row.active .asm-pc {
+      color: var(--accent-signal);
+    }
+
+    .asm-mnemonic {
+      color: var(--text-secondary);
+    }
+
+    .asm-row.active .asm-mnemonic {
+      color: var(--text-primary);
+    }
+
+    /* Stacks Split */
     .center-split {
       display: grid;
       grid-template-rows: 1fr 1fr;
-      gap: 12px;
+      gap: 8px;
       height: 100%;
     }
 
-    .stack-container {
+    /* Operand Stack */
+    .stack-rack {
       display: flex;
       flex-direction: column-reverse;
-      gap: 6px;
-      padding: 4px;
+      gap: 4px;
       min-height: 100%;
       justify-content: flex-start;
     }
 
-    .stack-item {
-      background: #1c2128;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 7px 12px;
+    .stack-cell {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      padding: 6px 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      transition: all 0.15s ease;
-    }
-    .stack-item.top {
-      border-color: var(--accent-green);
-      box-shadow: 0 0 10px rgba(63, 185, 80, 0.2);
-    }
-    .stack-item.linked, .heap-item.linked {
-      border-color: var(--accent-orange) !important;
-      box-shadow: 0 0 12px rgba(210, 153, 34, 0.4) !important;
+      transition: border-color 0.1s ease;
     }
 
-    .stack-val {
-      font-size: 0.92rem;
-      font-weight: 700;
-      color: #fff;
+    .stack-cell.top-cell {
+      border-color: var(--accent-signal);
+      border-left: 3px solid var(--accent-signal);
     }
-    .stack-badge {
-      font-size: 0.7rem;
-      padding: 2px 6px;
-      border-radius: 4px;
+
+    .stack-cell.linked, .heap-card.linked, .local-field.linked {
+      border-color: var(--accent-amber) !important;
+      background: rgba(245, 158, 11, 0.1) !important;
+    }
+
+    .stack-val-text {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .tag-pill {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 2px;
       text-transform: uppercase;
-      font-weight: 700;
+      letter-spacing: 0.5px;
     }
-    .badge-int { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
-    .badge-ptr { background: rgba(188, 140, 255, 0.15); color: var(--accent-purple); border: 1px solid var(--accent-purple); }
 
-    /* Call Frames */
-    .frame-card {
-      background: #1c2128;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      margin-bottom: 8px;
+    .tag-int {
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      background: rgba(6, 182, 212, 0.08);
+    }
+
+    .tag-ptr {
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    /* Call Stack Frames */
+    .frame-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      margin-bottom: 6px;
       overflow: hidden;
-      transition: all 0.15s ease;
     }
-    .frame-card.top {
-      border-color: var(--accent-purple);
-      box-shadow: 0 0 10px rgba(188, 140, 255, 0.15);
+
+    .frame-box.active-frame {
+      border-color: var(--border-strong);
+      border-left: 3px solid var(--accent-cyan);
     }
-    .frame-header {
-      background: #22272e;
-      padding: 6px 10px;
-      font-size: 0.75rem;
+
+    .frame-bar {
+      background: var(--bg-panel-header);
+      padding: 4px 8px;
+      font-size: 0.72rem;
       font-weight: 700;
-      color: var(--accent-purple);
+      color: var(--accent-cyan);
       display: flex;
       justify-content: space-between;
-    }
-    .frame-body {
-      padding: 6px 10px;
-      font-size: 0.78rem;
-    }
-    .locals-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 6px;
-      margin-top: 4px;
-    }
-    .local-cell {
-      background: #161b22;
-      border: 1px solid var(--border-color);
-      padding: 4px 6px;
-      border-radius: 4px;
-      transition: all 0.15s ease;
-    }
-    .local-cell.linked {
-      border-color: var(--accent-orange) !important;
-      box-shadow: 0 0 8px rgba(210, 153, 34, 0.4) !important;
-    }
-    .local-idx {
-      font-size: 0.65rem;
-      color: var(--text-dim);
-    }
-    .local-val {
-      font-weight: 600;
-      color: #fff;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    /* Right Panel: Heap & Console */
+    .frame-contents {
+      padding: 6px 8px;
+    }
+
+    .locals-matrix {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 4px;
+      margin-top: 3px;
+    }
+
+    .local-field {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 6px;
+      border-radius: 2px;
+    }
+
+    .local-meta {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .local-data {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Right Split: Heap & Terminal */
     .right-split {
       display: grid;
       grid-template-rows: 1fr 140px;
-      gap: 12px;
+      gap: 8px;
       height: 100%;
     }
 
-    .heap-item {
-      background: #1c2128;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 10px;
-      margin-bottom: 8px;
-      transition: all 0.15s ease;
+    .heap-card {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 2px;
+      padding: 6px 8px;
+      margin-bottom: 6px;
     }
-    .heap-item-header {
-      font-size: 0.75rem;
+
+    .heap-card-meta {
+      font-size: 0.7rem;
       font-weight: 700;
-      color: var(--accent-orange);
+      color: var(--accent-amber);
       display: flex;
       justify-content: space-between;
       margin-bottom: 4px;
     }
-    .heap-elements {
+
+    .heap-slots {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 4px;
-    }
-    .heap-cell {
-      background: #161b22;
-      border: 1px solid var(--border-color);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-    }
-    .heap-cell-idx {
-      font-size: 0.6rem;
-      color: var(--text-dim);
-      margin-right: 4px;
+      gap: 3px;
     }
 
-    .console-box {
+    .heap-slot-cell {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      padding: 1px 5px;
+      border-radius: 2px;
+      font-size: 0.72rem;
+    }
+
+    .heap-slot-idx {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      margin-right: 3px;
+    }
+
+    .terminal-window {
       background: #000;
-      color: #3fb950;
+      color: #22c55e;
       font-family: var(--font-mono);
-      font-size: 0.8rem;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
+      font-size: 0.76rem;
+      padding: 8px;
+      border-radius: 2px;
+      border: 1px solid var(--border-subtle);
       white-space: pre-wrap;
       overflow-y: auto;
       height: 100%;
     }
 
-    /* Footer Player Controls */
+    /* Footer Navigation */
     footer {
       background: var(--bg-panel-header);
-      border-top: 1px solid var(--border-color);
-      padding: 10px 20px;
+      border-top: 1px solid var(--border-subtle);
+      padding: 8px 16px;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 12px;
+      flex-shrink: 0;
     }
 
-    .btn-group {
+    .control-cluster {
       display: flex;
-      gap: 4px;
+      gap: 3px;
     }
 
-    .scrubber {
+    .scrubber-track {
       flex: 1;
       -webkit-appearance: none;
-      height: 6px;
-      border-radius: 3px;
-      background: var(--border-color);
+      height: 4px;
+      border-radius: 0;
+      background: var(--border-strong);
       outline: none;
     }
-    .scrubber::-webkit-slider-thumb {
+
+    .scrubber-track::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--accent-blue);
+      width: 12px;
+      height: 14px;
+      border-radius: 1px;
+      background: var(--accent-signal);
       cursor: pointer;
     }
 
-    .step-display {
+    .step-counter {
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      min-width: 120px;
+      color: var(--text-secondary);
+      min-width: 105px;
       text-align: right;
     }
 
-    @keyframes popIn {
-      0% { transform: scale(0.9); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .empty-hint {
-      color: var(--text-dim);
-      font-style: italic;
-      text-align: center;
-      padding: 20px 0;
-      font-size: 0.8rem;
-    }
-
-    /* Architecture Guide Modal */
-    .modal-overlay {
+    /* Spec Modal */
+    .spec-backdrop {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.85);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      padding: 20px;
+      padding: 24px;
     }
-    .modal-card {
+
+    .spec-modal {
       background: var(--bg-panel);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 2px;
       width: 100%;
-      max-width: 820px;
+      max-width: 840px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      overflow: hidden;
     }
-    .modal-header {
+
+    .spec-bar {
       background: var(--bg-panel-header);
-      padding: 12px 18px;
-      border-bottom: 1px solid var(--border-color);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .modal-tabs {
+
+    .spec-tab-row {
       display: flex;
-      background: #191f28;
-      border-bottom: 1px solid var(--border-color);
-      padding: 0 10px;
-      gap: 4px;
+      background: var(--bg-canvas);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0 8px;
+      gap: 2px;
     }
-    .modal-tab {
+
+    .spec-tab-btn {
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
-      color: var(--text-dim);
-      padding: 10px 14px;
-      font-size: 0.82rem;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
-      border-radius: 0;
     }
-    .modal-tab:hover {
-      color: var(--text-main);
-      background: transparent;
+
+    .spec-tab-btn:hover { color: var(--text-primary); }
+    .spec-tab-btn.active {
+      color: var(--accent-signal);
+      border-bottom-color: var(--accent-signal);
     }
-    .modal-tab.active {
-      color: var(--accent-blue);
-      border-bottom-color: var(--accent-blue);
-    }
-    .modal-body {
-      padding: 20px;
+
+    .spec-view {
+      padding: 16px;
       overflow-y: auto;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       line-height: 1.6;
-      color: var(--text-main);
     }
-    .modal-body h3 {
-      color: #fff;
-      font-size: 1rem;
+
+    .spec-view h3 {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .spec-view p {
       margin-bottom: 10px;
+      color: var(--text-secondary);
     }
-    .modal-body p {
-      margin-bottom: 12px;
-      color: var(--text-dim);
-    }
-    .modal-body code {
-      font-family: var(--font-mono);
-      background: #1c2128;
-      border: 1px solid var(--border-color);
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: var(--accent-purple);
-      font-size: 0.8rem;
-    }
-    .modal-body pre {
+
+    .spec-view pre {
       background: #000;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 12px;
+      border: 1px solid var(--border-subtle);
+      padding: 10px;
       font-family: var(--font-mono);
-      font-size: 0.8rem;
-      margin-bottom: 14px;
+      font-size: 0.75rem;
+      margin-bottom: 12px;
       overflow-x: auto;
-      color: #79c0ff;
+      color: var(--accent-cyan);
     }
-    .modal-table {
+
+    .spec-grid-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 16px;
-      font-size: 0.8rem;
+      margin-bottom: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
     }
-    .modal-table th, .modal-table td {
-      border: 1px solid var(--border-color);
-      padding: 8px 10px;
+
+    .spec-grid-table th, .spec-grid-table td {
+      border: 1px solid var(--border-subtle);
+      padding: 6px 8px;
       text-align: left;
     }
-    .modal-table th {
+
+    .spec-grid-table th {
       background: var(--bg-panel-header);
-      color: #fff;
+      color: var(--text-primary);
+    }
+
+    .null-state {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 16px 0;
+      font-size: 0.75rem;
     }
   </style>
 </head>
 <body>
 
+  <!-- Top Control Bar -->
   <header>
     <div class="brand">
-      <span>C0VM</span>
-      <span class="brand-badge">Visualizer</span>
+      <span class="brand-title">C0VM</span>
+      <span class="brand-badge">SYSTEM ENGINE</span>
     </div>
 
-    <div class="header-controls">
-      <label style="font-size: 0.8rem; color: var(--text-dim);">Interactive Demo:</label>
+    <div class="header-actions">
+      <label style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">PROGRAM:</label>
       <select id="demoSelect">
-        <option value="factorial">Recursive Factorial (factorial(5))</option>
-        <option value="array_heap">Dynamic Arrays on Heap</option>
-        <option value="collatz">Collatz 3n+1 Loop</option>
-        <option value="loop">Loop Summation (1..10)</option>
-        <option value="ifelse">Conditional Branching</option>
+        <option value="factorial">factorial (recursive call stack)</option>
+        <option value="array_heap">array_heap (dynamic memory alloc)</option>
+        <option value="collatz">collatz (arithmetic & branching)</option>
+        <option value="loop">loop (counter accumulation)</option>
+        <option value="ifelse">ifelse (branch prediction)</option>
       </select>
 
-      <button id="uploadBtn">Upload trace.json</button>
+      <button id="uploadBtn">IMPORT TRACE (.JSON)</button>
       <input type="file" id="fileInput" accept=".json" style="display: none;">
 
-      <button id="guideBtn" style="border-color: var(--accent-purple); color: var(--accent-purple); font-weight: 600;">📚 Architecture Guide</button>
+      <button id="specBtn">ARCHITECTURE SPEC</button>
 
-      <span class="status-badge" id="statusBadge">Ready</span>
+      <span class="telemetry-tag" id="statusBadge">STANDBY</span>
     </div>
   </header>
 
-  <!-- Teacher's Under-The-Hood Walkthrough Console -->
-  <div class="teacher-panel">
-    <div class="teacher-badge">
-      <span style="font-size: 1.25rem;">🧑‍🏫</span>
-      <div>
-        <div style="font-weight: 800; font-size: 0.72rem; letter-spacing: 0.5px; color: var(--accent-purple);">VM TEACHER</div>
-        <div style="font-size: 0.62rem; color: var(--text-dim); font-weight: 600;">UNDER THE HOOD</div>
+  <!-- Execution Mechanics Console (Pedagogical Narrative) -->
+  <div class="mechanics-strip">
+    <div class="mechanics-main">
+      <div class="mechanics-headline">
+        <span class="mechanics-title" id="mechanicsTitle">VIRTUAL MACHINE INITIALIZED</span>
+        <span class="mechanics-transition" id="mechanicsTransition">S &rarr; S'</span>
+      </div>
+      <div class="mechanics-desc" id="mechanicsDesc">
+        Load a bytecode binary or select an interactive execution trace to step through machine instructions, activation records, and heap memory.
       </div>
     </div>
 
-    <div class="teacher-content">
-      <div class="teacher-headline">
-        <span class="teacher-title" id="teacherTitle">Welcome to C0VM</span>
-        <span class="teacher-opcode" id="teacherOpcode">S → S'</span>
-      </div>
-      <div class="teacher-narrative" id="teacherNarrative">
-        Click <strong>Play</strong> or <strong>Step Forward (&rarr;)</strong> to watch how code compiles down to low-level stack instructions, activation records, and heap memory.
-      </div>
-    </div>
-
-    <div class="teacher-callout" id="teacherCallout">
-      <span>👀</span>
-      <span id="teacherCalloutText">Select an interactive demo above to start learning</span>
+    <div class="mechanics-callout" id="mechanicsCallout">
+      <div class="mechanics-callout-header">HARDWARE TELEMETRY</div>
+      <div id="mechanicsCalloutText">Ready for execution cycle. Press RUN or STEP.</div>
     </div>
   </div>
 
+  <!-- Main Execution Grid -->
   <main>
-    <!-- Left: Bytecode & Instructions -->
+    <!-- Left: Disassembly Listing -->
     <section class="panel">
       <div class="panel-header">
-        <span>Bytecode Listing</span>
-        <span id="currentFnLabel" style="color: var(--accent-blue);">_c0_main</span>
+        <span>DISASSEMBLY</span>
+        <span class="panel-header-sub" id="currentFnLabel">_c0_main</span>
       </div>
-      <div class="fn-selector-bar" id="fnTabs"></div>
+      <div class="fn-tabs-bar" id="fnTabs"></div>
       <div class="panel-body" id="bytecodeListing"></div>
     </section>
 
@@ -678,223 +742,223 @@
     <div class="center-split">
       <section class="panel">
         <div class="panel-header">
-          <span>Operand Stack (S)</span>
-          <span id="stackSizeLabel" style="font-size: 0.75rem;">0 items</span>
+          <span>OPERAND STACK (S)</span>
+          <span class="panel-header-sub" id="stackSizeLabel">0 ITEMS</span>
         </div>
-        <div class="panel-body stack-container" id="operandStack">
-          <div class="empty-hint">Stack is empty</div>
+        <div class="panel-body stack-rack" id="operandStack">
+          <div class="null-state">Stack empty (sp = 0)</div>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-header">
-          <span>Call Stack (Frames & Locals V)</span>
-          <span id="callDepthLabel" style="font-size: 0.75rem;">Depth: 1</span>
+          <span>CALL STACK (FRAMES &amp; LOCALS)</span>
+          <span class="panel-header-sub" id="callDepthLabel">DEPTH: 1</span>
         </div>
         <div class="panel-body" id="callStack"></div>
       </section>
     </div>
 
-    <!-- Right: Heap & Console Output -->
+    <!-- Right: Heap & Terminal -->
     <div class="right-split">
       <section class="panel">
         <div class="panel-header">
-          <span>Heap Objects</span>
-          <span id="heapCountLabel" style="font-size: 0.75rem;">0 objects</span>
+          <span>DYNAMIC HEAP MEMORY</span>
+          <span class="panel-header-sub" id="heapCountLabel">0 BLOCKS</span>
         </div>
         <div class="panel-body" id="heapContainer">
-          <div class="empty-hint">No heap objects allocated</div>
+          <div class="null-state">No dynamic heap allocations active</div>
         </div>
       </section>
 
       <section class="panel">
         <div class="panel-header">
-          <span>Console Output</span>
+          <span>HOST STDOUT TERMINAL</span>
         </div>
         <div class="panel-body" style="padding: 0;">
-          <div class="console-box" id="consoleOutput"></div>
+          <div class="terminal-window" id="consoleOutput"></div>
         </div>
       </section>
     </div>
   </main>
 
+  <!-- Footer Navigation -->
   <footer>
-    <div class="btn-group">
-      <button id="btnReset" title="Reset to start (R)">|&lt;&lt;</button>
-      <button id="btnPrev" title="Step backward (&larr;)">&lt;</button>
-      <button id="btnPlay" class="primary" title="Play / Pause (Space)">Play</button>
-      <button id="btnNext" title="Step forward (&rarr;)">&gt;</button>
-      <button id="btnEnd" title="Jump to end">&gt;&gt;|</button>
+    <div class="control-cluster">
+      <button id="btnReset" title="Reset (R)">RESET</button>
+      <button id="btnPrev" title="Step Back (&larr;)">PREV</button>
+      <button id="btnPlay" class="btn-accent" title="Play / Pause (Space)">RUN</button>
+      <button id="btnNext" title="Step Forward (&rarr;)">NEXT</button>
+      <button id="btnEnd" title="Jump to End">END</button>
     </div>
 
-    <input type="range" class="scrubber" id="scrubber" min="0" max="0" value="0">
+    <input type="range" class="scrubber-track" id="scrubber" min="0" max="0" value="0">
 
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <label style="font-size: 0.75rem; color: var(--text-dim);">Speed:</label>
-      <select id="speedSelect" style="padding: 4px 8px; font-size: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <label style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">RATE:</label>
+      <select id="speedSelect" style="padding: 2px 6px;">
         <option value="600">0.5x</option>
-        <option value="250" selected>1x</option>
-        <option value="90">2x</option>
-        <option value="30">5x</option>
+        <option value="250" selected>1.0x</option>
+        <option value="90">2.5x</option>
+        <option value="25">MAX</option>
       </select>
     </div>
 
-    <div class="step-display" id="stepDisplay">Step 0 / 0</div>
+    <div class="step-counter" id="stepDisplay">CYCLE 0 / 0</div>
   </footer>
 
-  <!-- Architecture Guide Modal -->
-  <div class="modal-overlay" id="guideModal" style="display: none;">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 1.1rem;">📚</span>
-          <span style="font-weight: 700; color: #fff;">Virtual Machine Architecture & Theory Guide</span>
-        </div>
-        <button id="closeModalBtn" style="background: transparent; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-dim); line-height: 1;">&times;</button>
+  <!-- Architecture Specification Modal -->
+  <div class="spec-backdrop" id="specModal" style="display: none;">
+    <div class="spec-modal">
+      <div class="spec-bar">
+        <span style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--text-primary);">
+          C0VM ARCHITECTURE &amp; MACHINE SEMANTICS
+        </span>
+        <button id="closeSpecBtn" style="padding: 2px 6px;">CLOSE [ESC]</button>
       </div>
 
-      <div class="modal-tabs">
-        <button class="modal-tab active" data-tab="tab-model">1. Stack vs. Register</button>
-        <button class="modal-tab" data-tab="tab-memory">2. The 3 Memory Regions</button>
-        <button class="modal-tab" data-tab="tab-semantics">3. Formal Stack Semantics</button>
-        <button class="modal-tab" data-tab="tab-dispatch">4. Interpreter Dispatch</button>
+      <div class="spec-tab-row">
+        <button class="spec-tab-btn active" data-tab="tab-model">EXECUTION MODEL</button>
+        <button class="spec-tab-btn" data-tab="tab-memory">MEMORY HIERARCHY</button>
+        <button class="spec-tab-btn" data-tab="tab-semantics">FORMAL SEMANTICS</button>
+        <button class="spec-tab-btn" data-tab="tab-dispatch">DISPATCH PIPELINE</button>
       </div>
 
-      <div class="modal-body">
+      <div class="spec-view">
         <!-- Tab 1 -->
-        <div class="tab-pane active" id="tab-model">
-          <h3>Why a Stack-Based Virtual Machine?</h3>
-          <p>Virtual execution engines like <strong>C0VM</strong>, the <strong>Java Virtual Machine (JVM)</strong>, <strong>WebAssembly (Wasm)</strong>, and <strong>CPython</strong> employ an <em>operand stack</em> rather than hardware registers.</p>
-          
-          <table class="modal-table">
+        <div class="tab-pane-view active" id="tab-model">
+          <h3>Stack-Based vs. Register-Based Architecture</h3>
+          <p>
+            Virtual execution environments divide into two fundamental paradigms: <strong>stack architectures</strong> (C0VM, JVM, WebAssembly, CPython) and <strong>register architectures</strong> (x86, ARM, LuaJIT).
+          </p>
+
+          <table class="spec-grid-table">
             <thead>
               <tr>
-                <th>Execution Dimension</th>
-                <th>Stack Machine (C0VM, JVM, Wasm)</th>
-                <th>Register Machine (x86, ARM, LuaJIT)</th>
+                <th>METRIC</th>
+                <th>STACK VM (C0VM, JVM, WASM)</th>
+                <th>REGISTER VM (X86, ARM, LUAJIT)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><strong>Operand Location</strong></td>
-                <td>Implicit (top of operand stack <code>S</code>)</td>
-                <td>Explicit registers (e.g. <code>r0, r1, r2</code>)</td>
+                <td>Operand Location</td>
+                <td>Implicit (top of operand stack S)</td>
+                <td>Explicit registers (r0, r1, r2)</td>
               </tr>
               <tr>
-                <td><strong>Instruction Size</strong></td>
-                <td><strong>1 Byte (Extremely Compact)</strong></td>
-                <td>2–4 Bytes (must encode register indices)</td>
+                <td>Instruction Density</td>
+                <td>1 Byte opcodes (compact binary size)</td>
+                <td>2 to 4 Bytes (must encode register indices)</td>
               </tr>
               <tr>
-                <td><strong>Compiler Overhead</strong></td>
-                <td><strong>Minimal</strong> (Post-order AST traversal)</td>
-                <td><strong>High</strong> (NP-hard Graph Coloring Register Allocation)</td>
+                <td>Compiler Complexity</td>
+                <td>Minimal (direct post-order AST walk)</td>
+                <td>High (NP-hard Graph Coloring allocation)</td>
               </tr>
               <tr>
-                <td><strong>Instruction Count</strong></td>
-                <td>More instructions (pushes + ALU ops)</td>
-                <td>Fewer instructions per operation</td>
+                <td>Hardware Neutrality</td>
+                <td>Complete (no assumption on register count)</td>
+                <td>Fixed virtual register count assumed</td>
               </tr>
             </tbody>
           </table>
 
-          <p><strong>Code Density Example:</strong> Evaluating <code>(a + b) * c</code></p>
-          <pre>vload a      # Push local a onto stack S
-vload b      # Push local b onto stack S
-iadd         # Pop a, b -> Push (a + b)
-vload c      # Push local c onto stack S
-imul         # Pop (a+b), c -> Push ((a + b) * c)</pre>
-          <p>Notice how every single instruction is 1 byte, with zero hardware register dependencies. This makes stack bytecode the ideal intermediate representation for cross-platform portability.</p>
+          <p>Evaluating an arithmetic expression such as <code>(a + b) * c</code>:</p>
+          <pre>vload a      # Push variable a to top of S
+vload b      # Push variable b to top of S
+iadd         # Pop a, b -> Push sum (a + b)
+vload c      # Push variable c to top of S
+imul         # Pop (a + b), c -> Push product ((a + b) * c)</pre>
+          <p>Zero CPU register allocation is required by the front-end compiler, maximizing binary portability across machine targets.</p>
         </div>
 
         <!-- Tab 2 -->
-        <div class="tab-pane" id="tab-memory" style="display: none;">
-          <h3>The Three Memory Regions</h3>
-          <p>Understanding how memory is partitioned is essential for understanding VM execution, stack overflows, and memory leaks:</p>
-          
-          <pre>┌──────────────────────────────────────────────────────────────────┐
-│                           C0VM Memory                            │
-├────────────────────────────────┬─────────────────────────────────┤
-│          Call Stack            │              Heap               │
-│  ┌──────────────────────────┐  │  ┌───────────────────────────┐  │
-│  │ Frame 2: factorial(n=1)  │  │  │ Dynamic Arrays (NEWARRAY) │  │
-│  │   V[0]=1, pc=0x000c      │  │  │   count, elt_size, *data  │  │
-│  │   S: [1]                 │  │  └───────────────────────────┘  │
-│  ├──────────────────────────┤  │  ┌───────────────────────────┐  │
-│  │ Frame 1: factorial(n=2)  │  │  │ Struct Blocks (NEW)       │  │
-│  │   V[0]=2, pc=0x000c      │  │  │   raw byte fields         │  │
-│  │   S: [2]                 │  │  └───────────────────────────┘  │
-│  ├──────────────────────────┤  │  ┌───────────────────────────┐  │
-│  │ Frame 0: _c0_main()      │  │  │ Immutable String Pool     │  │
-│  │   V[0]=0, pc=0x0002      │  │  │   null-terminated chars   │  │
-│  │   S: []                  │  │  └───────────────────────────┘  │
-│  └──────────────────────────┘  │                                 │
-└────────────────────────────────┴─────────────────────────────────┘</pre>
+        <div class="tab-pane-view" id="tab-memory" style="display: none;">
+          <h3>The Three Memory Subsystems</h3>
+          <pre>+------------------------------------------------------------------+
+|                           C0VM Memory                            |
++--------------------------------+---------------------------------+
+|          Call Stack            |              Heap               |
+|  +--------------------------+  |  +---------------------------+  |
+|  | Frame 2: factorial(n=1)  |  |  | Dynamic Arrays (NEWARRAY) |  |
+|  |   V[0]=1, pc=0x000c      |  |  |   count, elt_size, *data  |  |
+|  |   S: [1]                 |  |  +---------------------------+  |
+|  +--------------------------+  |  +---------------------------+  |
+|  | Frame 1: factorial(n=2)  |  |  | Struct Blocks (NEW)       |  |
+|  |   V[0]=2, pc=0x000c      |  |  |   raw byte fields         |  |
+|  |   S: [2]                 |  |  +---------------------------+  |
+|  +--------------------------+  |  +---------------------------+  |
+|  | Frame 0: _c0_main()      |  |  | Immutable String Pool     |  |
+|  |   V[0]=0, pc=0x0002      |  |  |   null-terminated chars   |  |
+|  |   S: []                  |  |  +---------------------------+  |
+|  +--------------------------+  |  +---------------------------+  |
++--------------------------------+---------------------------------+</pre>
 
-          <p><strong>1. Call Stack (Activation Records / Frames):</strong> Each function invocation allocates a fresh execution frame containing a pointer to its bytecode <code>P</code>, the program counter <code>pc</code>, and local variables <code>V[0..num_vars-1]</code>. When a function returns, its frame is popped and destroyed.</p>
-          <p><strong>2. Operand Stack (<code>S</code>):</strong> A local LIFO scratchpad for intermediate evaluations. Arithmetic, comparisons, and logic instructions pop operands from <code>S</code> and push the result back onto <code>S</code>.</p>
-          <p><strong>3. Dynamic Heap:</strong> Allocated using <code>malloc</code> / <code>calloc</code> for structs (<code>NEW</code>) and runtime-bounds-checked arrays (<code>NEWARRAY</code>). Lives beyond the stack frame that created it until reclaimed.</p>
+          <p><strong>1. Call Stack (Activation Records):</strong> Each function invocation allocates an isolated execution frame holding code pointer <code>P</code>, program counter <code>pc</code>, and local variables <code>V[0..num_vars-1]</code>. Recursion allocates new frames sequentially; returns deallocate the active frame and restore the caller.</p>
+          <p><strong>2. Operand Stack (S):</strong> LIFO evaluation scratchpad. Arithmetic, logic, and comparison instructions operate strictly on the top elements of <code>S</code>.</p>
+          <p><strong>3. Dynamic Heap:</strong> Allocated via host <code>malloc</code> for structs (<code>NEW</code>) and runtime-bounded arrays (<code>NEWARRAY</code>). Memory outlives the frame that allocated it.</p>
         </div>
 
         <!-- Tab 3 -->
-        <div class="tab-pane" id="tab-semantics" style="display: none;">
-          <h3>Formal Stack Transition Semantics</h3>
-          <p>In formal semantics (as taught at Carnegie Mellon), VM instructions are defined as state transition functions over the operand stack <code>S</code>:</p>
-          
-          <table class="modal-table">
+        <div class="tab-pane-view" id="tab-semantics" style="display: none;">
+          <h3>Formal Stack Transition Rules</h3>
+          <p>Instructions in C0VM are mathematically formalized as deterministic state transitions over the operand stack <code>S</code>:</p>
+
+          <table class="spec-grid-table">
             <thead>
               <tr>
-                <th>Opcode</th>
-                <th>Stack Transition</th>
-                <th>Formal Semantic Rule</th>
+                <th>OPCODE</th>
+                <th>STACK TRANSITION</th>
+                <th>BEHAVIOR</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><code>bipush b</code></td>
-                <td><code>S → S, b</code></td>
-                <td>Push sign-extended 8-bit integer literal</td>
+                <td><code>S -> S, b</code></td>
+                <td>Push 8-bit immediate sign-extended to 32 bits</td>
               </tr>
               <tr>
                 <td><code>vload i</code></td>
-                <td><code>S → S, V[i]</code></td>
-                <td>Read from frame's local variable array at index i</td>
+                <td><code>S -> S, V[i]</code></td>
+                <td>Copy value from local variable slot i to top of stack</td>
               </tr>
               <tr>
                 <td><code>vstore i</code></td>
-                <td><code>S, v → S</code></td>
-                <td>Store popped value into local variable <code>V[i] = v</code></td>
+                <td><code>S, v -> S</code></td>
+                <td>Pop top of stack and assign to local variable slot V[i]</td>
               </tr>
               <tr>
                 <td><code>iadd</code></td>
-                <td><code>S, x, y → S, (x + y)</code></td>
-                <td>Two's-complement 32-bit addition</td>
+                <td><code>S, x, y -> S, (x + y)</code></td>
+                <td>Two's-complement signed 32-bit addition</td>
               </tr>
               <tr>
                 <td><code>newarray s</code></td>
-                <td><code>S, n → S, a</code></td>
-                <td>Allocate array with element count n; push pointer a</td>
+                <td><code>S, n -> S, a</code></td>
+                <td>Allocate bounded array with length n; push pointer address a</td>
               </tr>
               <tr>
                 <td><code>aadds</code></td>
-                <td><code>S, a, i → S, &a[i]</code></td>
-                <td>Bounds check <code>0 ≤ i < count</code>; push element address</td>
+                <td><code>S, a, i -> S, &amp;a[i]</code></td>
+                <td>Verify <code>0 &le; i &lt; a.count</code>; push element memory address</td>
               </tr>
               <tr>
                 <td><code>imstore</code></td>
-                <td><code>S, p, v → S</code></td>
-                <td>Write 4-byte integer v into heap address p (<code>*p = v</code>)</td>
+                <td><code>S, p, v -> S</code></td>
+                <td>Store 4-byte integer v into memory cell at address p</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- Tab 4 -->
-        <div class="tab-pane" id="tab-dispatch" style="display: none;">
-          <h3>Interpreter Dispatch & CPU Optimization</h3>
-          <p>The instruction dispatch loop is the hottest loop in any virtual machine. Here is how modern engines optimize it:</p>
+        <div class="tab-pane-view" id="tab-dispatch" style="display: none;">
+          <h3>Dispatch Architecture &amp; Branch Prediction</h3>
+          <p>The instruction dispatch loop represents the primary performance bottleneck in bytecode interpreters:</p>
 
-          <p><strong>Method 1: Switch-Based Dispatch (Implemented in C0VM)</strong></p>
+          <p><strong>1. Switch-Based Dispatch (Implemented in C0VM):</strong></p>
           <pre>while (true) {
     uint8_t op = *pc++;
     switch (op) {
@@ -902,23 +966,22 @@ imul         # Pop (a+b), c -> Push ((a + b) * c)</pre>
         case ISUB: ... break;
     }
 }</pre>
-          <p>Standard ANSI C. Highly portable, but every opcode jumps back to the central loop header. Modern superscalar CPUs suffer branch mispredictions because all instructions share a single branch history table entry.</p>
+          <p>Portable across ANSI C compilers. However, every instruction branches through a single shared indirect jump, degrading CPU branch history buffers.</p>
 
-          <p><strong>Method 2: Direct Threaded Code (Computed Goto)</strong></p>
-          <pre>static void* dispatch_table[] = { &&do_iadd, &&do_isub, ... };
+          <p><strong>2. Direct Threaded Code (Computed Goto):</strong></p>
+          <pre>static void* dispatch_table[] = { &amp;&amp;do_iadd, &amp;&amp;do_isub, ... };
 #define DISPATCH() goto *dispatch_table[*pc++]
 
 do_iadd:
-    // ... perform add ...
-    DISPATCH();  // Jumps directly to NEXT instruction handler!</pre>
-          <p>Each instruction handler ends with its own indirect jump directly to the next opcode handler. This allows the CPU's Branch Target Buffer (BTB) to accurately predict opcode sequences, boosting execution speed by <strong>15–30%</strong> without needing a JIT compiler!</p>
+    // ... add ...
+    DISPATCH(); // Branches directly to next instruction handler</pre>
+          <p>Each opcode handler ends with an independent indirect jump directly to the subsequent opcode handler. This matches hardware branch target buffer (BTB) patterns, eliminating central switch overhead and accelerating execution by 15% to 30%.</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Preloaded Demos -->
-
   <script src="demos.js"></script>
 
   <script>
@@ -945,10 +1008,10 @@ do_iadd:
     const callDepthLabel = document.getElementById('callDepthLabel');
     const heapCountLabel = document.getElementById('heapCountLabel');
 
-    const teacherTitle = document.getElementById('teacherTitle');
-    const teacherOpcode = document.getElementById('teacherOpcode');
-    const teacherNarrative = document.getElementById('teacherNarrative');
-    const teacherCalloutText = document.getElementById('teacherCalloutText');
+    const mechanicsTitle = document.getElementById('mechanicsTitle');
+    const mechanicsTransition = document.getElementById('mechanicsTransition');
+    const mechanicsDesc = document.getElementById('mechanicsDesc');
+    const mechanicsCalloutText = document.getElementById('mechanicsCalloutText');
 
     const btnReset = document.getElementById('btnReset');
     const btnPrev = document.getElementById('btnPrev');
@@ -959,7 +1022,7 @@ do_iadd:
     const speedSelect = document.getElementById('speedSelect');
     const stepDisplay = document.getElementById('stepDisplay');
 
-    // Instruction pedagogical catalog
+    // Instruction pedagogical catalog (No emojis, high-precision technical narrative)
     function getInstructionConcept(mnemonic, step, idx, totalSteps) {
       const parts = mnemonic.split(' ');
       const op = parts[0];
@@ -968,111 +1031,111 @@ do_iadd:
       switch (op) {
         case 'bipush':
           return {
-            title: `Push Literal Constant (${arg})`,
-            opcode: `bipush ${arg} | S → S, ${arg}`,
-            narrative: `The compiler needs the raw value <strong>${arg}</strong> for an expression or argument. In machine execution, constants don't appear in thin air—they must be explicitly pushed onto the operand stack scratchpad before any math or function call can touch them.`,
-            callout: `👀 Look at Operand Stack: Added integer ${arg} to the top of the stack.`
+            title: `PUSH IMMEDIATE CONSTANT (${arg})`,
+            transition: `S -> S, ${arg}`,
+            desc: `The compiler requires numeric value <strong>${arg}</strong> for expression evaluation or function parameter setup. In stack machines, immediate constants must be explicitly loaded onto the operand stack scratchpad before arithmetic or call dispatch.`,
+            callout: `OPERAND STACK: Added integer ${arg} to top of stack.`
           };
         case 'ildc':
           return {
-            title: 'Load Constant from Pool',
-            opcode: `ildc | S → S, int_pool[${arg}]`,
-            narrative: `Large integer constants (larger than 8-bit bytes) cannot fit inside a standard 2-byte instruction. The compiler places them in the binary's <strong>Constant Pool</strong>, and <code>ildc</code> loads the constant onto the stack by table index.`,
-            callout: `👀 Look at Operand Stack: Loaded constant from binary pool.`
+            title: `LOAD 32-BIT CONSTANT [POOL INDEX ${arg}]`,
+            transition: `S -> S, int_pool[${arg}]`,
+            desc: `Constants exceeding signed 8-bit ranges cannot encode inside 2-byte instructions. The compiler indexes them into the executable binary's <strong>Constant Pool</strong>, loaded at runtime via table index.`,
+            callout: `OPERAND STACK: Loaded 32-bit constant from binary pool table.`
           };
         case 'aldc':
           return {
-            title: 'Push String Literal Reference',
-            opcode: `aldc | S → S, &string_pool[${arg}]`,
-            narrative: `Strings in C0 are immutable character arrays in the constant string pool. <code>aldc</code> pushes a 64-bit pointer address referencing the text literal in memory so functions like <code>println</code> can access it.`,
-            callout: `👀 Look at Operand Stack: Pushed string memory reference pointer.`
+            title: 'PUSH STRING LITERAL REFERENCE',
+            transition: `S -> S, &string_pool[${arg}]`,
+            desc: `String literals in C0 are immutable byte arrays inside the binary's string pool. The instruction pushes a 64-bit memory address pointing to the constant character buffer.`,
+            callout: `OPERAND STACK: Pushed string reference address pointer.`
           };
         case 'vload':
           return {
-            title: `Read Local Variable (${arg})`,
-            opcode: `vload ${arg} | S → S, V[${arg}]`,
-            narrative: `Reading from Frame Storage: Local variables live inside the active function's activation record (like virtual registers). To compute with <strong>${arg}</strong>, the VM copies its value from local storage onto the operand stack.`,
-            callout: `👀 Look at Call Stack: Copied ${arg} from local variables onto the operand stack.`
+            title: `READ LOCAL REGISTER SLOT (${arg})`,
+            transition: `S -> S, V[${arg}]`,
+            desc: `Frame Storage Retrieval: Local variables reside inside the current activation record. The VM reads local storage index <strong>${arg}</strong> and pushes its contents onto the evaluation stack.`,
+            callout: `CALL STACK: Copied value from frame slot ${arg} to operand stack.`
           };
         case 'vstore':
           return {
-            title: `Assign Local Variable (${arg})`,
-            opcode: `vstore ${arg} | S, v → S  (${arg} = v)`,
-            narrative: `Variable Assignment: Pops the evaluated result off the top of the operand stack and writes it into local variable slot <strong>${arg}</strong>. This corresponds directly to a high-level assignment like <code>x = ...;</code>.`,
-            callout: `👀 Look at Call Stack: Local variable ${arg} updated with new value.`
+            title: `STORE LOCAL REGISTER SLOT (${arg})`,
+            transition: `S, v -> S  (V[${arg}] = v)`,
+            desc: `Variable Mutation: Pops the top value from the evaluation stack and writes it into the current frame's local variable slot <strong>${arg}</strong> (mapping to source assignment <code>var = ...;</code>).`,
+            callout: `CALL STACK: Frame variable slot ${arg} updated.`
           };
         case 'iadd':
           return {
-            title: 'ALU: Integer Addition',
-            opcode: 'iadd | S, x, y → S, (x + y)',
-            narrative: `Arithmetic Evaluation: The stack machine's virtual ALU pops the top two numbers from the stack, computes their two's-complement sum, and pushes the result back onto the stack for the next operation.`,
-            callout: `👀 Look at Operand Stack: Replaced two operands with their sum.`
+            title: 'ALU ARITHMETIC: INTEGER ADDITION',
+            transition: 'S, x, y -> S, (x + y)',
+            desc: 'The virtual arithmetic logic unit pops top operands y and x, computes two\'s-complement sum x + y, and pushes the 32-bit result back to S.',
+            callout: 'OPERAND STACK: Evaluated sum; replaced top 2 items with result.'
           };
         case 'isub':
           return {
-            title: 'ALU: Integer Subtraction',
-            opcode: 'isub | S, x, y → S, (x - y)',
-            narrative: `Arithmetic Evaluation: Pops divisor/subtrahend and minuend from the stack, computes the difference, and pushes the result.`,
-            callout: `👀 Look at Operand Stack: Computed subtraction result.`
+            title: 'ALU ARITHMETIC: INTEGER SUBTRACTION',
+            transition: 'S, x, y -> S, (x - y)',
+            desc: 'Pops subtrahend y and minuend x, computes difference x - y, and pushes the result.',
+            callout: 'OPERAND STACK: Evaluated subtraction; pushed difference.'
           };
         case 'imul':
           return {
-            title: 'ALU: Integer Multiplication',
-            opcode: 'imul | S, x, y → S, (x * y)',
-            narrative: `Multiplication: The VM pops two operands and pushes their product. In recursive algorithms like factorial, this is where the accumulated multiplication happens during call-stack unwinding!`,
-            callout: `👀 Look at Operand Stack: Multiplied operands into product.`
+            title: 'ALU ARITHMETIC: INTEGER MULTIPLICATION',
+            transition: 'S, x, y -> S, (x * y)',
+            desc: 'Pops operands y and x, computes product x * y. In recursive calls like factorial, this executes the deferred product during frame unwinding.',
+            callout: 'OPERAND STACK: Evaluated product of operands.'
           };
         case 'idiv':
           return {
-            title: 'ALU: Integer Division',
-            opcode: 'idiv | S, x, y → S, (x / y)',
-            narrative: `Truncating Division: Pops divisor y and dividend x, verifies that y != 0 (aborting on divide-by-zero), and pushes truncated quotient x / y.`,
-            callout: `👀 Look at Operand Stack: Pushed division quotient.`
+            title: 'ALU ARITHMETIC: INTEGER DIVISION',
+            transition: 'S, x, y -> S, (x / y)',
+            desc: 'Pops divisor y and dividend x, checks condition y != 0 (aborting on division by zero), and pushes truncated quotient.',
+            callout: 'OPERAND STACK: Evaluated integer division.'
           };
         case 'irem':
           return {
-            title: 'ALU: Modulo Remainder',
-            opcode: 'irem | S, x, y → S, (x % y)',
-            narrative: `Remainder Calculation: Pops divisor and dividend, checks against zero, and pushes the remainder. Used extensively for parity checks (e.g. <code>n % 2 == 0</code> in Collatz).`,
-            callout: `👀 Look at Operand Stack: Pushed remainder.`
+            title: 'ALU ARITHMETIC: MODULO REMAINDER',
+            transition: 'S, x, y -> S, (x % y)',
+            desc: 'Pops divisor and dividend, verifies divisor non-zero, and pushes integer remainder.',
+            callout: 'OPERAND STACK: Evaluated modulo remainder.'
           };
         case 'ineg':
           return {
-            title: 'ALU: Two\'s-Complement Negation',
-            opcode: 'ineg | S, x → S, (-x)',
-            narrative: `Negation: Pops integer x from the operand stack and pushes its arithmetic negation -x.`,
-            callout: `👀 Look at Operand Stack: Inverted sign of number.`
+            title: 'ALU ARITHMETIC: SIGN INVERSION',
+            transition: 'S, x -> S, (-x)',
+            desc: 'Pops integer x and pushes two\'s-complement arithmetic negation -x.',
+            callout: 'OPERAND STACK: Inverted sign of top value.'
           };
         case 'iand':
         case 'ior':
         case 'ixor':
           return {
-            title: `Bitwise Logic (${op.toUpperCase()})`,
-            opcode: `${op} | S, x, y → S, (x ${op.replace('i','')} y)`,
-            narrative: `Bit-Level Manipulation: Pops two integers and performs bitwise logical operations across all 32 binary bits simultaneously.`,
-            callout: `👀 Look at Operand Stack: Computed bitwise result.`
+            title: `BITWISE LOGIC: ${op.toUpperCase()}`,
+            transition: `S, x, y -> S, (x ${op.replace('i','')} y)`,
+            desc: 'Executes bitwise logical transformation across all 32 bits of operands simultaneously.',
+            callout: 'OPERAND STACK: Pushed bitwise logic result.'
           };
         case 'ishl':
         case 'ishr':
           return {
-            title: `Bit Shift (${op === 'ishl' ? 'Left' : 'Right'})`,
-            opcode: `${op} | S, x, y → S, (x ${op === 'ishl' ? '<<' : '>>'} y)`,
-            narrative: `Bit Shifting: Pops shift amount y and operand x, bounds-checks that 0 <= y < 32, and executes the binary shift.`,
-            callout: `👀 Look at Operand Stack: Shifted binary bits.`
+            title: `BIT SHIFT: ${op === 'ishl' ? 'LOGICAL LEFT' : 'ARITHMETIC RIGHT'}`,
+            transition: `S, x, y -> S, (x ${op === 'ishl' ? '<<' : '>>'} y)`,
+            desc: 'Bounds-checks shift amount 0 <= y < 32, then executes binary bit shift on operand.',
+            callout: 'OPERAND STACK: Shifted bits on top operand.'
           };
         case 'pop':
           return {
-            title: 'Discard Stack Value',
-            opcode: 'pop | S, v → S',
-            narrative: `Cleaning the Stack: Discards the top element of the operand stack. Frequently generated when a function returns a value that the caller ignores (like an expression statement).`,
-            callout: `👀 Look at Operand Stack: Top item discarded.`
+            title: 'DISCARD STACK HEAD',
+            transition: 'S, v -> S',
+            desc: 'Discards top value from operand stack. Emitted when caller ignores a function return value.',
+            callout: 'OPERAND STACK: Discarded unused value.'
           };
         case 'dup':
           return {
-            title: 'Duplicate Stack Value',
-            opcode: 'dup | S, v → S, v, v',
-            narrative: `Stack Duplication: Copies the top value on the stack. Useful for short-circuit logical operators (&&, ||) and compound assignments.`,
-            callout: `👀 Look at Operand Stack: Top value duplicated.`
+            title: 'DUPLICATE STACK HEAD',
+            transition: 'S, v -> S, v, v',
+            desc: 'Duplicates top element on operand stack without re-evaluating expressions.',
+            callout: 'OPERAND STACK: Duplicated top value.'
           };
         case 'ifeq':
         case 'ifne':
@@ -1087,89 +1150,89 @@ do_iadd:
         case 'if_icmpgt':
         case 'if_icmple':
           return {
-            title: 'Conditional Branch: Control Flow',
-            opcode: `${op} | S, v → S`,
-            narrative: `Evaluating Control Flow: In low-level bytecode, high-level <code>if</code> and <code>while</code> constructs do not exist! Everything compiles down to condition checks that jump the program counter (PC) forward or backward in bytecode memory.`,
-            callout: `👀 Watch Bytecode Listing: Deciding whether to branch or continue sequentially.`
+            title: 'CONTROL FLOW: CONDITIONAL BRANCH',
+            transition: `${op} | S, v -> S`,
+            desc: 'In machine bytecode, high-level control structures compile to primitive conditional jumps. If condition evaluates true, program counter jumps to target address; otherwise falls through.',
+            callout: 'PROGRAM COUNTER: Branch condition evaluated; updating control flow.'
           };
         case 'goto':
           return {
-            title: 'Unconditional Jump (Loop Cycle)',
-            opcode: 'goto | pc = pc + offset',
-            narrative: `Looping Mechanics: Machine code has no loops! Loops are built by jumping backwards to the condition check with an unconditional <code>goto</code>. Watch the PC highlight jump backwards to restart the loop iteration.`,
-            callout: `👀 Watch Bytecode Listing: Program counter jumped backwards to top of loop.`
+            title: 'CONTROL FLOW: UNCONDITIONAL JUMP',
+            transition: 'pc = pc + offset',
+            desc: 'Unconditionally updates program counter to target bytecode address. Used to reset loop cycles.',
+            callout: 'PROGRAM COUNTER: Jumped instruction address to loop header.'
           };
         case 'invokestatic':
           return {
-            title: `Function Call: Allocate Activation Frame (${arg})`,
-            opcode: `invokestatic ${arg} | S, args → S (push frame)`,
-            narrative: `Function Invocation: In low-level execution, functions cannot just run on top of each other. The VM <strong>freezes the current caller frame</strong>, pushes it onto the Call Stack, and creates a brand-new activation record with fresh local variables for <strong>${arg}</strong>, copying arguments from the stack.`,
-            callout: `👀 Look at Call Stack: Stack depth increased! A new activation record was pushed.`
+            title: `FRAME ACTIVATION: INVOKE FUNCTION (${arg})`,
+            transition: `invokestatic ${arg} | S, args -> S (frame allocated)`,
+            desc: 'Function Call: Freezes active caller frame, pushes it onto the Call Stack, and instantiates an isolated activation record with fresh local variables V[0..n-1], transferring arguments from stack.',
+            callout: `CALL STACK: Frame depth increased to ${step.call_stack ? step.call_stack.length : 1}.`
           };
         case 'invokenative':
           return {
-            title: `Host C Foreign Call (${arg})`,
-            opcode: `invokenative ${arg} | S, args → S, ret`,
-            narrative: `Foreign Function Interface (FFI): The bytecode VM pauses and delegates execution to a host C function (console I/O, string parsing). Output appears directly in the terminal console below!`,
-            callout: `👀 Look at Console Output (bottom-right): Host C output printed.`
+            title: `FOREIGN CALL INTERFACE (${arg})`,
+            transition: `invokenative ${arg} | S, args -> S, ret`,
+            desc: 'Dispatches execution from VM bytecode to a native C host function (console I/O, string parsing). Output streams directly to host terminal.',
+            callout: 'HOST TERMINAL: Dispatched call to native C standard library.'
           };
         case 'return':
           if (step.call_stack && step.call_stack.length > 1) {
             return {
-              title: 'Function Return: Deallocate Frame',
-              opcode: 'return | S, v → S_caller, v (pop frame)',
-              narrative: `Call-Stack Unwinding: This function activation is finished! The VM pops the return value from this frame's stack, destroys the frame, restores the caller's paused frame from the Call Stack, and hands the return value to the caller.`,
-              callout: `👀 Look at Call Stack: Active frame popped! Caller frame resumed execution.`
+              title: 'FRAME DEALLOCATION: RESTORE CALLER',
+              transition: 'return | S, v -> S_caller, v (frame popped)',
+              desc: 'Call Stack Unwinding: Pops return value from active frame, destroys frame memory, restores caller frame from stack, and pushes result onto caller stack.',
+              callout: 'CALL STACK: Frame destroyed; caller frame resumed execution.'
             };
           } else {
             return {
-              title: 'Program Termination',
-              opcode: 'return | S, v → exit(v)',
-              narrative: `Program Complete: <code>_c0_main</code> has finished execution! The integer return value is popped from the stack and returned as the final exit code of the process.`,
-              callout: `🎉 Execution complete! Final exit value returned.`
+              title: 'PROCESS TERMINATION',
+              transition: 'return | S, v -> exit(v)',
+              desc: 'Entry function _c0_main finished execution. Integer return value popped from stack and returned as host process exit code.',
+              callout: 'EXECUTION COMPLETE: Final return code emitted.'
             };
           }
         case 'new':
           return {
-            title: `Heap Struct Allocation (${arg} Bytes)`,
-            opcode: `new ${arg} | S → S, ptr`,
-            narrative: `Heap Allocation: Dynamically allocates a zero-initialized struct block of ${arg} bytes on the heap and pushes its reference pointer onto the operand stack.`,
-            callout: `👀 Look at Heap Objects: A new struct memory block was allocated!`
+            title: `HEAP ALLOCATION: STRUCT (${arg} BYTES)`,
+            transition: `new ${arg} | S -> S, ptr`,
+            desc: `Requests ${arg} contiguous zero-initialized bytes from host heap allocator (malloc) and pushes base reference pointer.`,
+            callout: 'HEAP MEMORY: Allocated struct memory block.'
           };
         case 'newarray':
           return {
-            title: `Dynamic Array Allocation (${arg} B / element)`,
-            opcode: `newarray ${arg} | S, count → S, ptr`,
-            narrative: `Dynamic Memory Request: The VM asks the operating system allocator (<code>malloc</code>) for a contiguous memory block on the heap. Notice that <strong>V[0] does NOT contain the array</strong>! It only stores a 64-bit pointer address (like a house address) referencing the heap block on the right.`,
-            callout: `👀 Look at Heap Objects: A new dynamic array was allocated in RAM!`
+            title: `HEAP ALLOCATION: BOUNDED ARRAY (${arg} B / ELT)`,
+            transition: `newarray ${arg} | S, count -> S, ptr`,
+            desc: 'Dynamic Memory Allocation: Requests contiguous array block on heap with runtime bounds metadata. The local variable stores only the 64-bit pointer address referencing the heap block.',
+            callout: 'HEAP MEMORY: Dynamic array allocated on host RAM.'
           };
         case 'aadds':
           return {
-            title: 'Memory Address Arithmetic & Bounds Checking',
-            opcode: 'aadds | S, arr_ptr, idx → S, &arr[idx]',
-            narrative: `Safe Pointer Arithmetic: To access <code>arr[i]</code>, the VM calculates <code>base_ptr + (idx * elt_size)</code>. Crucially, C0VM verifies that <code>0 <= idx < count</code> at runtime! If out of bounds, it safely halts execution to prevent buffer overflow vulnerabilities.`,
-            callout: `👀 Look at Operand Stack: Pushed raw memory address of array element.`
+            title: 'POINTER ARITHMETIC & BOUNDS CHECK',
+            transition: 'aadds | S, arr_ptr, idx -> S, &arr[idx]',
+            desc: 'Computes target element address: base_ptr + (idx * elt_size). Verifies 0 <= idx < count at runtime to prevent buffer overflow attacks.',
+            callout: 'OPERAND STACK: Bounds verified; pushed element address.'
           };
         case 'imstore':
           return {
-            title: 'Direct RAM Store (*ptr = value)',
-            opcode: 'imstore | S, ptr, val → S',
-            narrative: `Writing into Heap Memory: Pops the 4-byte integer and the destination memory address, writing directly into physical RAM at that address. Notice how the heap object on the right mutates in real time!`,
-            callout: `👀 Look at Heap Objects: The array cell at the target address updated its value.`
+            title: 'DIRECT MEMORY WRITE (*ptr = val)',
+            transition: 'imstore | S, ptr, val -> S',
+            desc: 'Pops 4-byte integer and target memory address, writing directly into physical RAM at target address. The heap block updates in real time.',
+            callout: 'HEAP MEMORY: Memory cell at target address updated.'
           };
         case 'imload':
           return {
-            title: 'Direct RAM Load (value = *ptr)',
-            opcode: 'imload | S, ptr → S, *ptr',
-            narrative: `Dereferencing a Pointer: Pops the memory address from the stack, reads 4 bytes from that heap location, and pushes the loaded integer onto the stack.`,
-            callout: `👀 Look at Operand Stack: Loaded integer from heap memory.`
+            title: 'DIRECT MEMORY READ (val = *ptr)',
+            transition: 'imload | S, ptr -> S, *ptr',
+            desc: 'Dereferences memory address pointer, reads 4-byte integer from heap cell, and pushes value onto stack.',
+            callout: 'OPERAND STACK: Loaded value from target heap address.'
           };
         default:
           return {
-            title: `Executing: ${mnemonic}`,
-            opcode: `${mnemonic}`,
-            narrative: `Executing bytecode instruction at current program counter.`,
-            callout: `Step ${idx} of execution.`
+            title: `INSTRUCTION: ${mnemonic.toUpperCase()}`,
+            transition: mnemonic,
+            desc: 'Executing bytecode instruction at current program counter.',
+            callout: `Step ${idx} of program trace.`
           };
       }
     }
@@ -1198,7 +1261,7 @@ do_iadd:
         try {
           const data = JSON.parse(event.target.result);
           loadTraceData(data);
-          statusBadge.textContent = 'Custom Trace Loaded';
+          statusBadge.textContent = 'CUSTOM TRACE';
         } catch (err) {
           alert('Invalid trace JSON file: ' + err.message);
         }
@@ -1225,7 +1288,7 @@ do_iadd:
 
       currentTrace.functions.forEach(fn => {
         const btn = document.createElement('button');
-        btn.className = `fn-tab ${fn.id === activeTabFnId ? 'active' : ''}`;
+        btn.className = `fn-tab-btn ${fn.id === activeTabFnId ? 'active' : ''}`;
         btn.textContent = `${fn.name || 'fn_' + fn.id} (${fn.id})`;
         btn.onclick = () => {
           activeTabFnId = fn.id;
@@ -1243,7 +1306,7 @@ do_iadd:
       const fn = currentTrace.functions.find(f => f.id === activeTabFnId);
       if (!fn) return;
 
-      currentFnLabel.textContent = `${fn.name || 'fn_' + fn.id} (args: ${fn.num_args}, vars: ${fn.num_vars})`;
+      currentFnLabel.textContent = `${fn.name || 'fn_' + fn.id} (ARGS: ${fn.num_args}, LOCALS: ${fn.num_vars})`;
 
       const step = (currentTrace.steps && currentTrace.steps[currentStepIdx]) || null;
       const isCurrentExecutingFn = (step && step.fn_id === activeTabFnId);
@@ -1251,10 +1314,10 @@ do_iadd:
       fn.instructions.forEach(ins => {
         const div = document.createElement('div');
         const isActive = isCurrentExecutingFn && (step.pc === ins.pc);
-        div.className = `ins-line ${isActive ? 'active' : ''}`;
+        div.className = `asm-row ${isActive ? 'active' : ''}`;
         div.innerHTML = `
-          <span class="ins-pc">0x${ins.pc.toString(16).padStart(4, '0')}</span>
-          <span class="ins-mnemonic">${ins.mnemonic}</span>
+          <span class="asm-pc">0x${ins.pc.toString(16).padStart(4, '0')}</span>
+          <span class="asm-mnemonic">${ins.mnemonic}</span>
         `;
         if (isActive) {
           setTimeout(() => div.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 10);
@@ -1275,12 +1338,12 @@ do_iadd:
       currentStepIdx = idx;
       const step = currentTrace.steps[idx];
 
-      // Update Teacher's Under-The-Hood Walkthrough Console
+      // Update Pedagogical Narrative Engine
       const concept = getInstructionConcept(step.mnemonic, step, idx, currentTrace.steps.length);
-      teacherTitle.textContent = concept.title;
-      teacherOpcode.textContent = concept.opcode;
-      teacherNarrative.innerHTML = concept.narrative;
-      teacherCalloutText.textContent = concept.callout;
+      mechanicsTitle.textContent = concept.title;
+      mechanicsTransition.textContent = concept.transition;
+      mechanicsDesc.innerHTML = concept.desc;
+      mechanicsCalloutText.textContent = concept.callout;
 
       // Auto-switch function tab if needed
       if (step.fn_id !== activeTabFnId) {
@@ -1291,15 +1354,15 @@ do_iadd:
 
       // Update Scrubber & Display
       scrubber.value = idx;
-      stepDisplay.textContent = `Step ${idx} / ${currentTrace.steps.length - 1}`;
+      stepDisplay.textContent = `CYCLE ${idx} / ${currentTrace.steps.length - 1}`;
 
       // Status
       if (idx === currentTrace.steps.length - 1) {
-        statusBadge.textContent = `Finished (Ret: ${currentTrace.return_value})`;
-        statusBadge.className = 'status-badge done';
+        statusBadge.textContent = `HALTED (RET: ${currentTrace.return_value})`;
+        statusBadge.className = 'telemetry-tag finished';
       } else {
-        statusBadge.textContent = step.mnemonic;
-        statusBadge.className = 'status-badge running';
+        statusBadge.textContent = `RUNNING [PC: 0x${step.pc.toString(16).padStart(4, '0')}]`;
+        statusBadge.className = 'telemetry-tag active';
       }
 
       // Operand Stack
@@ -1308,57 +1371,57 @@ do_iadd:
         step.stack.forEach((item, sIdx) => {
           const div = document.createElement('div');
           const isTop = (sIdx === step.stack.length - 1);
-          div.className = `stack-item ${isTop ? 'top' : ''}`;
+          div.className = `stack-cell ${isTop ? 'top-cell' : ''}`;
           if (item.type === 'ptr') {
             div.setAttribute('data-addr', item.addr);
             div.onmouseenter = () => highlightAddress(item.addr);
             div.onmouseleave = () => unhighlightAddress(item.addr);
           }
           div.innerHTML = `
-            <span class="stack-val">${item.type === 'int' ? item.val : item.addr}</span>
-            <span class="stack-badge ${item.type === 'int' ? 'badge-int' : 'badge-ptr'}">${item.type}</span>
+            <span class="stack-val-text">${item.type === 'int' ? item.val : item.addr}</span>
+            <span class="tag-pill ${item.type === 'int' ? 'tag-int' : 'tag-ptr'}">${item.type}</span>
           `;
           operandStack.appendChild(div);
         });
-        stackSizeLabel.textContent = `${step.stack.length} item${step.stack.length > 1 ? 's' : ''}`;
+        stackSizeLabel.textContent = `${step.stack.length} ITEMS`;
       } else {
-        operandStack.innerHTML = '<div class="empty-hint">Stack is empty</div>';
-        stackSizeLabel.textContent = '0 items';
+        operandStack.innerHTML = '<div class="null-state">Stack empty (sp = 0)</div>';
+        stackSizeLabel.textContent = '0 ITEMS';
       }
 
       // Call Stack
       callStack.innerHTML = '';
       if (step.call_stack) {
-        callDepthLabel.textContent = `Depth: ${step.call_stack.length}`;
+        callDepthLabel.textContent = `DEPTH: ${step.call_stack.length}`;
         [...step.call_stack].reverse().forEach((frame, fIdx) => {
           const isTop = (fIdx === 0);
           const fnObj = currentTrace.functions.find(f => f.id === frame.fn_id);
           const fnName = fnObj ? fnObj.name : `fn_${frame.fn_id}`;
 
           const div = document.createElement('div');
-          div.className = `frame-card ${isTop ? 'top' : ''}`;
+          div.className = `frame-box ${isTop ? 'active-frame' : ''}`;
 
           let localsHtml = '';
           if (frame.locals && frame.locals.length > 0) {
             frame.locals.forEach((v, vIdx) => {
               const isPtr = (v.type === 'ptr');
               localsHtml += `
-                <div class="local-cell" ${isPtr ? `data-addr="${v.addr}" onmouseenter="highlightAddress('${v.addr}')" onmouseleave="unhighlightAddress('${v.addr}')"` : ''}>
-                  <div class="local-idx">V[${vIdx}] (${v.type})</div>
-                  <div class="local-val">${v.type === 'int' ? v.val : v.addr}</div>
+                <div class="local-field" ${isPtr ? `data-addr="${v.addr}" onmouseenter="highlightAddress('${v.addr}')" onmouseleave="unhighlightAddress('${v.addr}')"` : ''}>
+                  <div class="local-meta">V[${vIdx}] ${v.type}</div>
+                  <div class="local-data">${v.type === 'int' ? v.val : v.addr}</div>
                 </div>
               `;
             });
           }
 
           div.innerHTML = `
-            <div class="frame-header">
+            <div class="frame-bar">
               <span>${fnName}</span>
               <span>PC: 0x${frame.pc.toString(16).padStart(4, '0')}</span>
             </div>
-            <div class="frame-body">
-              <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 2px;">Local Variables:</div>
-              <div class="locals-grid">${localsHtml}</div>
+            <div class="frame-contents">
+              <div style="font-size: 0.65rem; color: var(--text-muted); margin-bottom: 2px;">LOCAL STORAGE:</div>
+              <div class="locals-matrix">${localsHtml}</div>
             </div>
           `;
           callStack.appendChild(div);
@@ -1368,10 +1431,10 @@ do_iadd:
       // Heap Objects
       heapContainer.innerHTML = '';
       if (step.heap && step.heap.length > 0) {
-        heapCountLabel.textContent = `${step.heap.length} object${step.heap.length > 1 ? 's' : ''}`;
+        heapCountLabel.textContent = `${step.heap.length} BLOCKS`;
         step.heap.forEach((obj, hIdx) => {
           const div = document.createElement('div');
-          div.className = 'heap-item';
+          div.className = 'heap-card';
           div.setAttribute('data-addr', obj.addr);
           div.onmouseenter = () => highlightAddress(obj.addr);
           div.onmouseleave = () => unhighlightAddress(obj.addr);
@@ -1381,26 +1444,26 @@ do_iadd:
             let cells = '';
             if (obj.elements) {
               obj.elements.forEach((el, elIdx) => {
-                cells += `<span class="heap-cell"><span class="heap-cell-idx">[${elIdx}]</span>${el}</span>`;
+                cells += `<span class="heap-slot-cell"><span class="heap-slot-idx">[${elIdx}]</span>${el}</span>`;
               });
             }
-            bodyHtml = `<div class="heap-elements">${cells}</div>`;
+            bodyHtml = `<div class="heap-slots">${cells}</div>`;
           } else {
-            bodyHtml = `<div style="font-size: 0.75rem; color: var(--text-dim);">Struct memory block (${obj.size} bytes)</div>`;
+            bodyHtml = `<div style="font-size: 0.72rem; color: var(--text-muted);">Contiguous struct buffer (${obj.size} bytes)</div>`;
           }
 
           div.innerHTML = `
-            <div class="heap-item-header">
+            <div class="heap-card-meta">
               <span>${obj.kind.toUpperCase()} @ ${obj.addr}</span>
-              <span>${obj.count ? obj.count + ' elts' : obj.size + ' B'}</span>
+              <span>${obj.count ? obj.count + ' ELTS' : obj.size + ' B'}</span>
             </div>
             ${bodyHtml}
           `;
           heapContainer.appendChild(div);
         });
       } else {
-        heapCountLabel.textContent = '0 objects';
-        heapContainer.innerHTML = '<div class="empty-hint">No heap objects allocated</div>';
+        heapCountLabel.textContent = '0 BLOCKS';
+        heapContainer.innerHTML = '<div class="null-state">No dynamic heap allocations active</div>';
       }
 
       // Console
@@ -1411,8 +1474,8 @@ do_iadd:
     function play() {
       if (!currentTrace || isPlaying) return;
       isPlaying = true;
-      btnPlay.textContent = 'Pause';
-      btnPlay.classList.remove('primary');
+      btnPlay.textContent = 'PAUSE';
+      btnPlay.classList.remove('btn-accent');
 
       const speed = parseInt(speedSelect.value, 10);
       playInterval = setInterval(() => {
@@ -1426,8 +1489,8 @@ do_iadd:
 
     function pause() {
       isPlaying = false;
-      btnPlay.textContent = 'Play';
-      btnPlay.classList.add('primary');
+      btnPlay.textContent = 'RUN';
+      btnPlay.classList.add('btn-accent');
       if (playInterval) {
         clearInterval(playInterval);
         playInterval = null;
@@ -1476,29 +1539,29 @@ do_iadd:
     });
 
     // Architecture Guide Modal Logic
-    const guideBtn = document.getElementById('guideBtn');
-    const guideModal = document.getElementById('guideModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const modalTabs = document.querySelectorAll('.modal-tab');
-    const tabPanes = document.querySelectorAll('.tab-pane');
+    const specBtn = document.getElementById('specBtn');
+    const specModal = document.getElementById('specModal');
+    const closeSpecBtn = document.getElementById('closeSpecBtn');
+    const specTabs = document.querySelectorAll('.spec-tab-btn');
+    const specPanes = document.querySelectorAll('.tab-pane-view');
 
-    guideBtn.addEventListener('click', () => {
+    specBtn.addEventListener('click', () => {
       pause();
-      guideModal.style.display = 'flex';
+      specModal.style.display = 'flex';
     });
 
-    closeModalBtn.addEventListener('click', () => {
-      guideModal.style.display = 'none';
+    closeSpecBtn.addEventListener('click', () => {
+      specModal.style.display = 'none';
     });
 
-    guideModal.addEventListener('click', (e) => {
-      if (e.target === guideModal) guideModal.style.display = 'none';
+    specModal.addEventListener('click', (e) => {
+      if (e.target === specModal) specModal.style.display = 'none';
     });
 
-    modalTabs.forEach(tab => {
+    specTabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        modalTabs.forEach(t => t.classList.remove('active'));
-        tabPanes.forEach(p => p.style.display = 'none');
+        specTabs.forEach(t => t.classList.remove('active'));
+        specPanes.forEach(p => p.style.display = 'none');
 
         tab.classList.add('active');
         const targetId = tab.getAttribute('data-tab');
@@ -1510,7 +1573,7 @@ do_iadd:
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        guideModal.style.display = 'none';
+        specModal.style.display = 'none';
         return;
       }
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
