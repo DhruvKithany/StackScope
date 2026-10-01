@@ -276,7 +276,7 @@ code_ifelse = [
 code_ifelse = [
     0x10, 3,       # 00,01: bipush 3
     0x10, 5,       # 02,03: bipush 5
-    0xA1, 0, 6,    # 04,05,06: IF_ICMPLT +6 → target = (07-3)+6 = 10 = 0x0A ✓
+    0xA1, 0, 6,    # 04,05,06: IF_ICMPLT +6 -> target = (07-3)+6 = 10 = 0x0A [OK]
     0x10, 0,       # 07,08: bipush 0
     0xB0,          # 09: return
     0x10, 1,       # 0A,0B: bipush 1
@@ -347,7 +347,7 @@ code_loop = [
     0x10, 1,          # 18,19: bipush 1
     0x60,             # 1A:    iadd
     0x36, 1,          # 1B,1C: vstore 1   (i++)
-    0xA7, 0xFF, 0xEB, # 1D,1E,1F: goto -21 → target=0x20-3+(-21)=0x1D-21=0x08 ✓
+    0xA7, 0xFF, 0xEB, # 1D,1E,1F: goto -21 -> target=0x20-3+(-21)=0x1D-21=0x08 [OK]
     # exit at 0x20
     0x15, 0,          # 20,21: vload 0    (s)
     0xB0,             # 22:    return
@@ -408,7 +408,7 @@ code_factorial_main = [
 
 code_factorial = [
     0x15, 0,          # 00,01: vload 0   (n)
-    0x99, 0x00, 0x0F, # 02,03,04: ifeq +15 → target=0x05-3+15=0x11 ✓
+    0x99, 0x00, 0x0F, # 02,03,04: ifeq +15 -> target=0x05-3+15=0x11 [OK]
     0x15, 0,          # 05,06: vload 0   (n)
     0x15, 0,          # 07,08: vload 0   (n)
     0x10, 1,          # 09,0A: bipush 1
@@ -455,4 +455,47 @@ write_test('negative_return',
     make_bc0(functions=[(0, 0, code_neg_ret)]),
     "Program exited with return value -1\n")
 
+# -----------------------------------------------------------------------
+# Test 13: array_heap – allocate an array of 3 ints, store & load
+# arr[0] = 10; arr[1] = 20; arr[2] = 30; return arr[0] + arr[1] + arr[2] = 60
+# -----------------------------------------------------------------------
+code_array = [
+    0x10, 3,       # bipush 3 (array length)
+    0xBC, 4,       # newarray elt_size=4
+    0x36, 0,       # vstore 0 (arr = V[0])
+
+    # arr[0] = 10
+    0x15, 0,       # vload 0
+    0x10, 0,       # bipush 0 (idx)
+    0x63,          # aadds
+    0x10, 10,      # bipush 10
+    0x4F,          # imstore
+
+    # arr[1] = 20
+    0x15, 0,       # vload 0
+    0x10, 1,       # bipush 1
+    0x63,          # aadds
+    0x10, 20,      # bipush 20
+    0x4F,          # imstore
+
+    # arr[2] = 30
+    0x15, 0,       # vload 0
+    0x10, 2,       # bipush 2
+    0x63,          # aadds
+    0x10, 30,      # bipush 30
+    0x4F,          # imstore
+
+    # load arr[0] + arr[1] + arr[2]
+    0x15, 0, 0x10, 0, 0x63, 0x2E,  # load arr[0] -> 10
+    0x15, 0, 0x10, 1, 0x63, 0x2E,  # load arr[1] -> 20
+    0x60,                          # iadd -> 30
+    0x15, 0, 0x10, 2, 0x63, 0x2E,  # load arr[2] -> 30
+    0x60,                          # iadd -> 60
+    0xB0                           # return 60
+]
+write_test('array_heap',
+    make_bc0(functions=[(0, 1, code_array)]),
+    "Program exited with return value 60\n")
+
 print("\nAll test files generated in tests/")
+
