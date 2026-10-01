@@ -305,6 +305,18 @@
       font-weight: 600;
     }
 
+    .fn-meta-strip {
+      padding: 3px 10px;
+      background: var(--bg-canvas);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
     .asm-row {
       display: flex;
       align-items: center;
@@ -380,6 +392,32 @@
     .stack-cell.linked, .heap-card.linked, .local-field.linked {
       border-color: var(--accent-amber) !important;
       background: rgba(245, 158, 11, 0.1) !important;
+    }
+
+    @keyframes flash-pulse {
+      0% { background: rgba(255, 77, 0, 0.45) !important; border-color: var(--accent-signal) !important; }
+      100% { }
+    }
+
+    .flash-change {
+      animation: flash-pulse 0.45s ease-out;
+    }
+
+    .keyboard-legend {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-canvas);
+      padding: 3px 8px;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    .keyboard-legend span {
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-right: 4px;
     }
 
     .stack-val-text {
@@ -686,13 +724,13 @@
   <header>
     <div class="brand">
       <span class="brand-title">C0VM</span>
-      <span class="brand-badge">SYSTEM ENGINE</span>
+      <span class="brand-badge">TIME-TRAVEL ENGINE</span>
     </div>
 
     <div class="header-actions">
       <label style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted);">PROGRAM:</label>
       <select id="demoSelect">
-        <option value="factorial">factorial (recursive call stack)</option>
+        <option value="factorial" selected>factorial (recursive call stack)</option>
         <option value="array_heap">array_heap (dynamic memory alloc)</option>
         <option value="collatz">collatz (arithmetic & branching)</option>
         <option value="loop">loop (counter accumulation)</option>
@@ -721,7 +759,7 @@
     </div>
 
     <div class="mechanics-callout" id="mechanicsCallout">
-      <div class="mechanics-callout-header">HARDWARE TELEMETRY</div>
+      <div class="mechanics-callout-header">EXECUTION LOG</div>
       <div id="mechanicsCalloutText">Ready for execution cycle. Press RUN or STEP.</div>
     </div>
   </div>
@@ -735,6 +773,11 @@
         <span class="panel-header-sub" id="currentFnLabel">_c0_main</span>
       </div>
       <div class="fn-tabs-bar" id="fnTabs"></div>
+      <div class="fn-meta-strip" id="fnMetaStrip">
+        <span id="fnMetaArgs">ARGS: 0</span>
+        <span id="fnMetaVars">LOCALS: 1</span>
+        <span id="fnMetaCodeLen">LEN: 0B</span>
+      </div>
       <div class="panel-body" id="bytecodeListing"></div>
     </section>
 
@@ -802,6 +845,8 @@
         <option value="90">2.5x</option>
         <option value="25">MAX</option>
       </select>
+    <div class="keyboard-legend">
+      <span>KEYS:</span> [SPACE] RUN &bull; [&larr;/&rarr;] STEP &bull; [HOME/END] &bull; [R] RESET
     </div>
 
     <div class="step-counter" id="stepDisplay">CYCLE 0 / 0</div>
@@ -998,6 +1043,9 @@ do_iadd:
     const fileInput = document.getElementById('fileInput');
     const statusBadge = document.getElementById('statusBadge');
     const fnTabs = document.getElementById('fnTabs');
+    const fnMetaArgs = document.getElementById('fnMetaArgs');
+    const fnMetaVars = document.getElementById('fnMetaVars');
+    const fnMetaCodeLen = document.getElementById('fnMetaCodeLen');
     const bytecodeListing = document.getElementById('bytecodeListing');
     const operandStack = document.getElementById('operandStack');
     const callStack = document.getElementById('callStack');
@@ -1022,7 +1070,7 @@ do_iadd:
     const speedSelect = document.getElementById('speedSelect');
     const stepDisplay = document.getElementById('stepDisplay');
 
-    // Instruction pedagogical catalog (No emojis, high-precision technical narrative)
+    // Instruction catalog with concise, active-voice descriptions and stack effects
     function getInstructionConcept(mnemonic, step, idx, totalSteps) {
       const parts = mnemonic.split(' ');
       const op = parts[0];
@@ -1031,111 +1079,125 @@ do_iadd:
       switch (op) {
         case 'bipush':
           return {
-            title: `PUSH IMMEDIATE CONSTANT (${arg})`,
+            title: `BIPUSH ${arg}`,
             transition: `S -> S, ${arg}`,
-            desc: `The compiler requires numeric value <strong>${arg}</strong> for expression evaluation or function parameter setup. In stack machines, immediate constants must be explicitly loaded onto the operand stack scratchpad before arithmetic or call dispatch.`,
-            callout: `OPERAND STACK: Added integer ${arg} to top of stack.`
+            desc: `Pushes the 8-bit sign-extended constant <strong>${arg}</strong> onto the operand stack.`,
+            callout: `Pushed immediate integer ${arg} onto evaluation stack.`
           };
         case 'ildc':
           return {
-            title: `LOAD 32-BIT CONSTANT [POOL INDEX ${arg}]`,
+            title: `ILDC (POOL #${arg})`,
             transition: `S -> S, int_pool[${arg}]`,
-            desc: `Constants exceeding signed 8-bit ranges cannot encode inside 2-byte instructions. The compiler indexes them into the executable binary's <strong>Constant Pool</strong>, loaded at runtime via table index.`,
-            callout: `OPERAND STACK: Loaded 32-bit constant from binary pool table.`
+            desc: `Pushes 32-bit integer constant from pool index ${arg} onto the operand stack.`,
+            callout: `Loaded 32-bit constant from constant pool.`
           };
         case 'aldc':
           return {
-            title: 'PUSH STRING LITERAL REFERENCE',
-            transition: `S -> S, &string_pool[${arg}]`,
-            desc: `String literals in C0 are immutable byte arrays inside the binary's string pool. The instruction pushes a 64-bit memory address pointing to the constant character buffer.`,
-            callout: `OPERAND STACK: Pushed string reference address pointer.`
+            title: `ALDC (STR #${arg})`,
+            transition: `S -> S, &str_pool[${arg}]`,
+            desc: `Pushes pointer to string literal at pool index ${arg} onto the operand stack.`,
+            callout: `Pushed string literal address pointer onto stack.`
+          };
+        case 'aconst_null':
+          return {
+            title: 'ACONST_NULL',
+            transition: 'S -> S, NULL',
+            desc: 'Pushes null pointer onto the operand stack.',
+            callout: 'Pushed NULL pointer reference onto stack.'
           };
         case 'vload':
           return {
-            title: `READ LOCAL REGISTER SLOT (${arg})`,
+            title: `VLOAD V[${arg}]`,
             transition: `S -> S, V[${arg}]`,
-            desc: `Frame Storage Retrieval: Local variables reside inside the current activation record. The VM reads local storage index <strong>${arg}</strong> and pushes its contents onto the evaluation stack.`,
-            callout: `CALL STACK: Copied value from frame slot ${arg} to operand stack.`
+            desc: `Reads local variable slot <strong>V[${arg}]</strong> and pushes value onto the operand stack.`,
+            callout: `Copied local variable V[${arg}] to operand stack.`
           };
         case 'vstore':
           return {
-            title: `STORE LOCAL REGISTER SLOT (${arg})`,
+            title: `VSTORE V[${arg}]`,
             transition: `S, v -> S  (V[${arg}] = v)`,
-            desc: `Variable Mutation: Pops the top value from the evaluation stack and writes it into the current frame's local variable slot <strong>${arg}</strong> (mapping to source assignment <code>var = ...;</code>).`,
-            callout: `CALL STACK: Frame variable slot ${arg} updated.`
+            desc: `Pops top value from the operand stack and writes it into local variable slot <strong>V[${arg}]</strong>.`,
+            callout: `Stored value into local variable slot V[${arg}].`
           };
         case 'iadd':
           return {
-            title: 'ALU ARITHMETIC: INTEGER ADDITION',
+            title: 'IADD',
             transition: 'S, x, y -> S, (x + y)',
-            desc: 'The virtual arithmetic logic unit pops top operands y and x, computes two\'s-complement sum x + y, and pushes the 32-bit result back to S.',
-            callout: 'OPERAND STACK: Evaluated sum; replaced top 2 items with result.'
+            desc: 'Pops y and x, computes two\'s-complement sum (x + y), and pushes result onto the stack.',
+            callout: 'Evaluated sum (x + y); pushed 32-bit result.'
           };
         case 'isub':
           return {
-            title: 'ALU ARITHMETIC: INTEGER SUBTRACTION',
+            title: 'ISUB',
             transition: 'S, x, y -> S, (x - y)',
-            desc: 'Pops subtrahend y and minuend x, computes difference x - y, and pushes the result.',
-            callout: 'OPERAND STACK: Evaluated subtraction; pushed difference.'
+            desc: 'Pops subtrahend y and minuend x, computes (x - y), and pushes difference onto the stack.',
+            callout: 'Evaluated subtraction (x - y); pushed difference.'
           };
         case 'imul':
           return {
-            title: 'ALU ARITHMETIC: INTEGER MULTIPLICATION',
+            title: 'IMUL',
             transition: 'S, x, y -> S, (x * y)',
-            desc: 'Pops operands y and x, computes product x * y. In recursive calls like factorial, this executes the deferred product during frame unwinding.',
-            callout: 'OPERAND STACK: Evaluated product of operands.'
+            desc: 'Pops y and x, computes signed product (x * y), and pushes result onto the stack.',
+            callout: 'Evaluated multiplication; pushed product.'
           };
         case 'idiv':
           return {
-            title: 'ALU ARITHMETIC: INTEGER DIVISION',
+            title: 'IDIV',
             transition: 'S, x, y -> S, (x / y)',
-            desc: 'Pops divisor y and dividend x, checks condition y != 0 (aborting on division by zero), and pushes truncated quotient.',
-            callout: 'OPERAND STACK: Evaluated integer division.'
+            desc: 'Pops divisor y and dividend x, guards against division-by-zero, and pushes quotient (x / y).',
+            callout: 'Evaluated division; pushed quotient.'
           };
         case 'irem':
           return {
-            title: 'ALU ARITHMETIC: MODULO REMAINDER',
+            title: 'IREM',
             transition: 'S, x, y -> S, (x % y)',
-            desc: 'Pops divisor and dividend, verifies divisor non-zero, and pushes integer remainder.',
-            callout: 'OPERAND STACK: Evaluated modulo remainder.'
+            desc: 'Pops divisor y and dividend x, guards against division-by-zero, and pushes remainder (x % y).',
+            callout: 'Evaluated modulo remainder.'
           };
         case 'ineg':
           return {
-            title: 'ALU ARITHMETIC: SIGN INVERSION',
+            title: 'INEG',
             transition: 'S, x -> S, (-x)',
-            desc: 'Pops integer x and pushes two\'s-complement arithmetic negation -x.',
-            callout: 'OPERAND STACK: Inverted sign of top value.'
+            desc: 'Pops x, computes two\'s-complement arithmetic negation (-x), and pushes result.',
+            callout: 'Inverted sign of top stack value.'
           };
         case 'iand':
         case 'ior':
         case 'ixor':
           return {
-            title: `BITWISE LOGIC: ${op.toUpperCase()}`,
+            title: op.toUpperCase(),
             transition: `S, x, y -> S, (x ${op.replace('i','')} y)`,
-            desc: 'Executes bitwise logical transformation across all 32 bits of operands simultaneously.',
-            callout: 'OPERAND STACK: Pushed bitwise logic result.'
+            desc: 'Pops y and x, computes bitwise logic operation across 32 bits, and pushes result.',
+            callout: `Evaluated bitwise ${op.toUpperCase()} logic.`
           };
         case 'ishl':
         case 'ishr':
           return {
-            title: `BIT SHIFT: ${op === 'ishl' ? 'LOGICAL LEFT' : 'ARITHMETIC RIGHT'}`,
-            transition: `S, x, y -> S, (x ${op === 'ishl' ? '<<' : '>>'} y)`,
-            desc: 'Bounds-checks shift amount 0 <= y < 32, then executes binary bit shift on operand.',
-            callout: 'OPERAND STACK: Shifted bits on top operand.'
+            title: op.toUpperCase(),
+            transition: `S, x, y -> S, (x ${op === 'ishl' ? '<<' : '>>'} (y & 31))`,
+            desc: 'Pops shift amount y and operand x, computes binary bit shift, and pushes result.',
+            callout: `Shifted bits on top stack operand.`
           };
         case 'pop':
           return {
-            title: 'DISCARD STACK HEAD',
+            title: 'POP',
             transition: 'S, v -> S',
-            desc: 'Discards top value from operand stack. Emitted when caller ignores a function return value.',
-            callout: 'OPERAND STACK: Discarded unused value.'
+            desc: 'Discards top value from the operand stack.',
+            callout: 'Discarded top stack element.'
           };
         case 'dup':
           return {
-            title: 'DUPLICATE STACK HEAD',
+            title: 'DUP',
             transition: 'S, v -> S, v, v',
-            desc: 'Duplicates top element on operand stack without re-evaluating expressions.',
-            callout: 'OPERAND STACK: Duplicated top value.'
+            desc: 'Duplicates top value on the operand stack.',
+            callout: 'Duplicated top stack element.'
+          };
+        case 'swap':
+          return {
+            title: 'SWAP',
+            transition: 'S, x, y -> S, y, x',
+            desc: 'Swaps positions of top two values on the operand stack.',
+            callout: 'Swapped top 2 stack elements.'
           };
         case 'ifeq':
         case 'ifne':
@@ -1150,86 +1212,100 @@ do_iadd:
         case 'if_icmpgt':
         case 'if_icmple':
           return {
-            title: 'CONTROL FLOW: CONDITIONAL BRANCH',
-            transition: `${op} | S, v -> S`,
-            desc: 'In machine bytecode, high-level control structures compile to primitive conditional jumps. If condition evaluates true, program counter jumps to target address; otherwise falls through.',
-            callout: 'PROGRAM COUNTER: Branch condition evaluated; updating control flow.'
+            title: op.toUpperCase(),
+            transition: `${op} -> target offset`,
+            desc: 'Evaluates branch condition; if true, jumps PC to relative target address, otherwise falls through.',
+            callout: 'Evaluated branch condition; updated control flow.'
           };
         case 'goto':
           return {
-            title: 'CONTROL FLOW: UNCONDITIONAL JUMP',
+            title: 'GOTO',
             transition: 'pc = pc + offset',
-            desc: 'Unconditionally updates program counter to target bytecode address. Used to reset loop cycles.',
-            callout: 'PROGRAM COUNTER: Jumped instruction address to loop header.'
+            desc: 'Unconditional relative jump; updates program counter to target address.',
+            callout: 'Jumped execution to target instruction address.'
           };
         case 'invokestatic':
           return {
-            title: `FRAME ACTIVATION: INVOKE FUNCTION (${arg})`,
-            transition: `invokestatic ${arg} | S, args -> S (frame allocated)`,
-            desc: 'Function Call: Freezes active caller frame, pushes it onto the Call Stack, and instantiates an isolated activation record with fresh local variables V[0..n-1], transferring arguments from stack.',
-            callout: `CALL STACK: Frame depth increased to ${step.call_stack ? step.call_stack.length : 1}.`
+            title: `INVOKESTATIC (${arg})`,
+            transition: `S, args -> S (frame allocated)`,
+            desc: 'Pushes caller frame onto call stack, creates child activation frame with arguments, and jumps to function.',
+            callout: `Pushed new activation frame; depth is now ${step.call_stack ? step.call_stack.length : 1}.`
           };
         case 'invokenative':
           return {
-            title: `FOREIGN CALL INTERFACE (${arg})`,
-            transition: `invokenative ${arg} | S, args -> S, ret`,
-            desc: 'Dispatches execution from VM bytecode to a native C host function (console I/O, string parsing). Output streams directly to host terminal.',
-            callout: 'HOST TERMINAL: Dispatched call to native C standard library.'
+            title: `INVOKENATIVE (${arg})`,
+            transition: `S, args -> S, ret`,
+            desc: 'Dispatches execution to native C host library function and pushes return value onto stack.',
+            callout: 'Executed native host library function.'
           };
         case 'return':
           if (step.call_stack && step.call_stack.length > 1) {
             return {
-              title: 'FRAME DEALLOCATION: RESTORE CALLER',
-              transition: 'return | S, v -> S_caller, v (frame popped)',
-              desc: 'Call Stack Unwinding: Pops return value from active frame, destroys frame memory, restores caller frame from stack, and pushes result onto caller stack.',
-              callout: 'CALL STACK: Frame destroyed; caller frame resumed execution.'
+              title: 'RETURN',
+              transition: 'S, v -> S_caller, v',
+              desc: 'Pops return value, deallocates current activation frame, and resumes caller execution.',
+              callout: 'Deallocated activation frame; restored caller frame.'
             };
           } else {
             return {
               title: 'PROCESS TERMINATION',
               transition: 'return | S, v -> exit(v)',
-              desc: 'Entry function _c0_main finished execution. Integer return value popped from stack and returned as host process exit code.',
-              callout: 'EXECUTION COMPLETE: Final return code emitted.'
+              desc: 'Entry function _c0_main finished execution; return value emitted as process exit code.',
+              callout: 'Execution complete; process exit code emitted.'
             };
           }
         case 'new':
           return {
-            title: `HEAP ALLOCATION: STRUCT (${arg} BYTES)`,
+            title: `NEW (${arg} BYTES)`,
             transition: `new ${arg} | S -> S, ptr`,
-            desc: `Requests ${arg} contiguous zero-initialized bytes from host heap allocator (malloc) and pushes base reference pointer.`,
-            callout: 'HEAP MEMORY: Allocated struct memory block.'
+            desc: `Allocates ${arg} zero-initialized bytes on the dynamic heap and pushes base pointer.`,
+            callout: 'Allocated struct memory block on heap.'
           };
         case 'newarray':
           return {
-            title: `HEAP ALLOCATION: BOUNDED ARRAY (${arg} B / ELT)`,
+            title: `NEWARRAY (${arg} B/ELT)`,
             transition: `newarray ${arg} | S, count -> S, ptr`,
-            desc: 'Dynamic Memory Allocation: Requests contiguous array block on heap with runtime bounds metadata. The local variable stores only the 64-bit pointer address referencing the heap block.',
-            callout: 'HEAP MEMORY: Dynamic array allocated on host RAM.'
+            desc: `Pops count, allocates bounded array of ${arg}-byte elements on dynamic heap, and pushes pointer.`,
+            callout: 'Allocated bounded dynamic array on heap.'
           };
         case 'aadds':
           return {
-            title: 'POINTER ARITHMETIC & BOUNDS CHECK',
-            transition: 'aadds | S, arr_ptr, idx -> S, &arr[idx]',
-            desc: 'Computes target element address: base_ptr + (idx * elt_size). Verifies 0 <= idx < count at runtime to prevent buffer overflow attacks.',
-            callout: 'OPERAND STACK: Bounds verified; pushed element address.'
-          };
-        case 'imstore':
-          return {
-            title: 'DIRECT MEMORY WRITE (*ptr = val)',
-            transition: 'imstore | S, ptr, val -> S',
-            desc: 'Pops 4-byte integer and target memory address, writing directly into physical RAM at target address. The heap block updates in real time.',
-            callout: 'HEAP MEMORY: Memory cell at target address updated.'
+            title: 'AADDS',
+            transition: 'S, arr, idx -> S, &arr[idx]',
+            desc: 'Guards bounds (0 <= idx < count), computes element address &arr[idx], and pushes pointer.',
+            callout: 'Bounds verified; pushed element address pointer.'
           };
         case 'imload':
           return {
-            title: 'DIRECT MEMORY READ (val = *ptr)',
-            transition: 'imload | S, ptr -> S, *ptr',
-            desc: 'Dereferences memory address pointer, reads 4-byte integer from heap cell, and pushes value onto stack.',
-            callout: 'OPERAND STACK: Loaded value from target heap address.'
+            title: 'IMLOAD',
+            transition: 'S, ptr -> S, *ptr',
+            desc: 'Dereferences memory address pointer and pushes 32-bit integer read from heap.',
+            callout: 'Read 32-bit integer from heap memory.'
+          };
+        case 'imstore':
+          return {
+            title: 'IMSTORE',
+            transition: 'S, ptr, val -> S',
+            desc: 'Pops 32-bit integer and heap pointer, writing value directly to memory address.',
+            callout: 'Updated memory cell at target heap address.'
+          };
+        case 'amload':
+          return {
+            title: 'AMLOAD',
+            transition: 'S, ptr -> S, *ptr',
+            desc: 'Dereferences address pointer and pushes pointer value read from heap.',
+            callout: 'Read pointer reference from heap memory.'
+          };
+        case 'amstore':
+          return {
+            title: 'AMSTORE',
+            transition: 'S, ptr, val -> S',
+            desc: 'Pops pointer value and heap pointer, writing reference to memory address.',
+            callout: 'Updated pointer cell at target heap address.'
           };
         default:
           return {
-            title: `INSTRUCTION: ${mnemonic.toUpperCase()}`,
+            title: mnemonic.toUpperCase(),
             transition: mnemonic,
             desc: 'Executing bytecode instruction at current program counter.',
             callout: `Step ${idx} of program trace.`
@@ -1237,10 +1313,38 @@ do_iadd:
       }
     }
 
-    // Load initial demo
+    // Shareable URL state
+    function updateUrlState() {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('program', demoSelect.value);
+        url.searchParams.set('step', currentStepIdx);
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {
+        // Fallback in case of local file origin restrictions
+      }
+    }
+
+    // Load initial demo with query params support
     window.addEventListener('DOMContentLoaded', () => {
-      if (window.PRELOADED_DEMOS && window.PRELOADED_DEMOS['factorial']) {
-        loadTraceData(window.PRELOADED_DEMOS['factorial']);
+      let progKey = 'factorial';
+      let initialStep = 1;
+
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('program')) progKey = params.get('program');
+        if (params.has('step')) {
+          const s = parseInt(params.get('step'), 10);
+          if (!isNaN(s) && s >= 0) initialStep = s;
+        }
+      } catch (e) {}
+
+      if (demoSelect) demoSelect.value = progKey;
+
+      if (window.PRELOADED_DEMOS && window.PRELOADED_DEMOS[progKey]) {
+        loadTraceData(window.PRELOADED_DEMOS[progKey], initialStep);
+      } else if (window.PRELOADED_DEMOS && window.PRELOADED_DEMOS['factorial']) {
+        loadTraceData(window.PRELOADED_DEMOS['factorial'], initialStep);
       }
     });
 
@@ -1248,8 +1352,9 @@ do_iadd:
       pause();
       const demoKey = e.target.value;
       if (window.PRELOADED_DEMOS && window.PRELOADED_DEMOS[demoKey]) {
-        loadTraceData(window.PRELOADED_DEMOS[demoKey]);
+        loadTraceData(window.PRELOADED_DEMOS[demoKey], 0);
       }
+      e.target.blur();
     });
 
     uploadBtn.addEventListener('click', () => fileInput.click());
@@ -1260,7 +1365,7 @@ do_iadd:
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target.result);
-          loadTraceData(data);
+          loadTraceData(data, 0);
           statusBadge.textContent = 'CUSTOM TRACE';
         } catch (err) {
           alert('Invalid trace JSON file: ' + err.message);
@@ -1269,17 +1374,19 @@ do_iadd:
       reader.readAsText(file);
     });
 
-    function loadTraceData(data) {
+    function loadTraceData(data, initialStep = 0) {
       currentTrace = data;
-      currentStepIdx = 0;
       activeTabFnId = 0;
 
+      const maxStep = (data.steps ? data.steps.length - 1 : 0);
+      currentStepIdx = Math.min(Math.max(0, initialStep), maxStep);
+
       scrubber.min = 0;
-      scrubber.max = (data.steps ? data.steps.length - 1 : 0);
-      scrubber.value = 0;
+      scrubber.max = maxStep;
+      scrubber.value = currentStepIdx;
 
       renderFunctionTabs();
-      renderStep(0);
+      renderStep(currentStepIdx);
     }
 
     function renderFunctionTabs() {
@@ -1306,7 +1413,10 @@ do_iadd:
       const fn = currentTrace.functions.find(f => f.id === activeTabFnId);
       if (!fn) return;
 
-      currentFnLabel.textContent = `${fn.name || 'fn_' + fn.id} (ARGS: ${fn.num_args}, LOCALS: ${fn.num_vars})`;
+      currentFnLabel.textContent = fn.name || 'fn_' + fn.id;
+      if (fnMetaArgs) fnMetaArgs.textContent = `ARGS: ${fn.num_args}`;
+      if (fnMetaVars) fnMetaVars.textContent = `LOCALS: ${fn.num_vars}`;
+      if (fnMetaCodeLen) fnMetaCodeLen.textContent = `LEN: ${fn.code_length}B`;
 
       const step = (currentTrace.steps && currentTrace.steps[currentStepIdx]) || null;
       const isCurrentExecutingFn = (step && step.fn_id === activeTabFnId);
@@ -1337,6 +1447,7 @@ do_iadd:
       if (!currentTrace || !currentTrace.steps || !currentTrace.steps[idx]) return;
       currentStepIdx = idx;
       const step = currentTrace.steps[idx];
+      const prevStep = (idx > 0 && currentTrace.steps) ? currentTrace.steps[idx - 1] : null;
 
       // Update Pedagogical Narrative Engine
       const concept = getInstructionConcept(step.mnemonic, step, idx, currentTrace.steps.length);
@@ -1355,6 +1466,7 @@ do_iadd:
       // Update Scrubber & Display
       scrubber.value = idx;
       stepDisplay.textContent = `CYCLE ${idx} / ${currentTrace.steps.length - 1}`;
+      updateUrlState();
 
       // Status
       if (idx === currentTrace.steps.length - 1) {
@@ -1368,10 +1480,12 @@ do_iadd:
       // Operand Stack
       operandStack.innerHTML = '';
       if (step.stack && step.stack.length > 0) {
+        const stackGrew = prevStep ? (step.stack.length > (prevStep.stack ? prevStep.stack.length : 0)) : true;
         step.stack.forEach((item, sIdx) => {
           const div = document.createElement('div');
           const isTop = (sIdx === step.stack.length - 1);
-          div.className = `stack-cell ${isTop ? 'top-cell' : ''}`;
+          const shouldFlash = isTop && stackGrew;
+          div.className = `stack-cell ${isTop ? 'top-cell' : ''} ${shouldFlash ? 'flash-change' : ''}`;
           if (item.type === 'ptr') {
             div.setAttribute('data-addr', item.addr);
             div.onmouseenter = () => highlightAddress(item.addr);
@@ -1393,20 +1507,28 @@ do_iadd:
       callStack.innerHTML = '';
       if (step.call_stack) {
         callDepthLabel.textContent = `DEPTH: ${step.call_stack.length}`;
+        const framePushed = prevStep ? (step.call_stack.length > (prevStep.call_stack ? prevStep.call_stack.length : 0)) : false;
+
+        let vstoreTarget = -1;
+        if (step.mnemonic.startsWith('vstore')) {
+          vstoreTarget = parseInt(step.mnemonic.split(' ')[1] || '-1', 10);
+        }
+
         [...step.call_stack].reverse().forEach((frame, fIdx) => {
           const isTop = (fIdx === 0);
           const fnObj = currentTrace.functions.find(f => f.id === frame.fn_id);
           const fnName = fnObj ? fnObj.name : `fn_${frame.fn_id}`;
 
           const div = document.createElement('div');
-          div.className = `frame-box ${isTop ? 'active-frame' : ''}`;
+          div.className = `frame-box ${isTop ? 'active-frame' : ''} ${(isTop && framePushed) ? 'flash-change' : ''}`;
 
           let localsHtml = '';
           if (frame.locals && frame.locals.length > 0) {
             frame.locals.forEach((v, vIdx) => {
               const isPtr = (v.type === 'ptr');
+              const localChanged = isTop && (vIdx === vstoreTarget);
               localsHtml += `
-                <div class="local-field" ${isPtr ? `data-addr="${v.addr}" onmouseenter="highlightAddress('${v.addr}')" onmouseleave="unhighlightAddress('${v.addr}')"` : ''}>
+                <div class="local-field ${localChanged ? 'flash-change' : ''}" ${isPtr ? `data-addr="${v.addr}" onmouseenter="highlightAddress('${v.addr}')" onmouseleave="unhighlightAddress('${v.addr}')"` : ''}>
                   <div class="local-meta">V[${vIdx}] ${v.type}</div>
                   <div class="local-data">${v.type === 'int' ? v.val : v.addr}</div>
                 </div>
@@ -1432,9 +1554,11 @@ do_iadd:
       heapContainer.innerHTML = '';
       if (step.heap && step.heap.length > 0) {
         heapCountLabel.textContent = `${step.heap.length} BLOCKS`;
+        const heapMutated = step.mnemonic.startsWith('new') || step.mnemonic.startsWith('imstore') || step.mnemonic.startsWith('amstore');
+
         step.heap.forEach((obj, hIdx) => {
           const div = document.createElement('div');
-          div.className = 'heap-card';
+          div.className = `heap-card ${heapMutated ? 'flash-change' : ''}`;
           div.setAttribute('data-addr', obj.addr);
           div.onmouseenter = () => highlightAddress(obj.addr);
           div.onmouseleave = () => unhighlightAddress(obj.addr);
@@ -1576,15 +1700,23 @@ do_iadd:
         specModal.style.display = 'none';
         return;
       }
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.target.tagName === 'INPUT') return;
       if (e.code === 'Space') {
         e.preventDefault();
         if (isPlaying) pause(); else play();
       } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
         btnNext.click();
       } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
         btnPrev.click();
-      } else if (e.code === 'KeyR') {
+      } else if (e.code === 'Home') {
+        e.preventDefault();
+        btnReset.click();
+      } else if (e.code === 'End') {
+        e.preventDefault();
+        btnEnd.click();
+      } else if (e.code === 'KeyR' && !e.ctrlKey && !e.metaKey) {
         btnReset.click();
       }
     });
