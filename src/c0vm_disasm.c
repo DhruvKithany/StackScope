@@ -1,6 +1,6 @@
 /*
  * C0VM - C0 Virtual Machine
- * CMU 15-122: Principles of Imperative Computation
+ * C0 Virtual Machine Implementation
  *
  * c0vm_disasm.c - Bytecode disassembler and instruction decoder.
  */

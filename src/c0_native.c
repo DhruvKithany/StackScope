@@ -1,6 +1,6 @@
 /*
  * C0VM - C0 Virtual Machine
- * CMU 15-122: Principles of Imperative Computation
+ * C0 Virtual Machine Implementation
  *
  * c0_native.c - Implementations of the native (C library) functions that
  * can be called from C0 bytecode via the INVOKENATIVE opcode.
@@ -318,7 +318,7 @@ c0_value c0_args_argv(c0_value *args) {
  *
  * The index in this table must match function_table_index stored in
  * the bc0 file.  The C0 compiler assigns these in the order the standard
- * library headers are included.  The standard ordering used by CMU's cc0
+ * library headers are included.  The standard ordering used by the C0 reference compiler
  * compiler is reproduced here.
  *
  * Index 0-5   : conio

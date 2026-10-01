@@ -1,6 +1,6 @@
 /*
  * C0VM - C0 Virtual Machine
- * CMU 15-122: Principles of Imperative Computation
+ * C0 Virtual Machine Implementation
  *
  * bc0_reader.c - Binary parser for .bc0 bytecode files.
  *

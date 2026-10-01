@@ -1,6 +1,6 @@
 /*
  * C0VM - C0 Virtual Machine
- * CMU 15-122: Principles of Imperative Computation
+ * C0 Virtual Machine Implementation
  *
  * c0_native.h - Declarations for the native (C library) functions that
  * C0 programs can call via the INVOKENATIVE opcode.
@@ -8,7 +8,7 @@
  * The native function table maps function_table_index values (stored in
  * native_info structs) to actual C function pointers.
  *
- * Standard native libraries provided by CMU's C0 runtime:
+ * Standard native libraries provided by the C0 runtime:
  *   - conio   : print, println, readline, etc.
  *   - string  : string operations (length, sub, compare, …)
  *   - parse   : int_to_string, string_to_int
@@ -71,5 +71,10 @@ c0_value c0_error(c0_value *args);
 /* args */
 c0_value c0_args_argc(c0_value *args);
 c0_value c0_args_argv(c0_value *args);
+
+/* Execution trace stdout interception */
+void        c0_trace_append_stdout(const char *str);
+const char *c0_trace_get_stdout_snapshot(void);
+void        c0_trace_clear_stdout(void);
 
 #endif /* C0_NATIVE_H */
