@@ -1,6 +1,6 @@
 /*
  * C0VM - C0 Virtual Machine
- * CMU 15-122: Principles of Imperative Computation
+ * C0 Virtual Machine Implementation
  *
  * c0vm.c - Core bytecode interpreter and execution tracer.
  */
@@ -240,7 +240,89 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
     size_t step_count = 0;
 
     /* ===== Main Execution Loop =========================================== */
+    uint8_t op;
+
+#if defined(__GNUC__) && defined(USE_COMPUTED_GOTO)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverride-init"
+    static const void *const dispatch_table[256] = {
+        [0 ... 255]   = &&op_DEFAULT,
+        [NOP]         = &&op_NOP,
+        [ACONST_NULL] = &&op_ACONST_NULL,
+        [BIPUSH]      = &&op_BIPUSH,
+        [ILDC]        = &&op_ILDC,
+        [ALDC]        = &&op_ALDC,
+        [VLOAD]       = &&op_VLOAD,
+        [VSTORE]      = &&op_VSTORE,
+        [POP]         = &&op_POP,
+        [POP2]        = &&op_POP2,
+        [DUP]         = &&op_DUP,
+        [SWAP]        = &&op_SWAP,
+        [IADD]        = &&op_IADD,
+        [ISUB]        = &&op_ISUB,
+        [IMUL]        = &&op_IMUL,
+        [IDIV]        = &&op_IDIV,
+        [IREM]        = &&op_IREM,
+        [INEG]        = &&op_INEG,
+        [ISHL]        = &&op_ISHL,
+        [ISHR]        = &&op_ISHR,
+        [IUSHR]       = &&op_IUSHR,
+        [IAND]        = &&op_IAND,
+        [IOR]         = &&op_IOR,
+        [IXOR]        = &&op_IXOR,
+        [IFEQ]        = &&op_IFEQ,
+        [IFNE]        = &&op_IFNE,
+        [IFLT]        = &&op_IFLT,
+        [IFGE]        = &&op_IFGE,
+        [IFGT]        = &&op_IFGT,
+        [IFLE]        = &&op_IFLE,
+        [IF_ICMPEQ]   = &&op_IF_ICMPEQ,
+        [IF_ICMPNE]   = &&op_IF_ICMPNE,
+        [IF_ICMPLT]   = &&op_IF_ICMPLT,
+        [IF_ICMPGE]   = &&op_IF_ICMPGE,
+        [IF_ICMPGT]   = &&op_IF_ICMPGT,
+        [IF_ICMPLE]   = &&op_IF_ICMPLE,
+        [GOTO]        = &&op_GOTO,
+        [ACMPEQ]      = &&op_ACMPEQ,
+        [ACMPNE]      = &&op_ACMPNE,
+        [IMLOAD]      = &&op_IMLOAD,
+        [IMSTORE]     = &&op_IMSTORE,
+        [AMLOAD]      = &&op_AMLOAD,
+        [AMSTORE]     = &&op_AMSTORE,
+        [NEW]         = &&op_NEW,
+        [NEWARRAY]    = &&op_NEWARRAY,
+        [ARRAYLENGTH] = &&op_ARRAYLENGTH,
+        [GETFIELD]    = &&op_GETFIELD,
+        [PUTFIELD]    = &&op_PUTFIELD,
+        [AADDF]       = &&op_AADDF,
+        [AADDS]       = &&op_AADDS,
+        [INVOKESTATIC]= &&op_INVOKESTATIC,
+        [INVOKENATIVE]= &&op_INVOKENATIVE,
+        [RETURN]      = &&op_RETURN,
+        [ATHROW]      = &&op_ATHROW,
+        [CHECKTAG]    = &&op_CHECKTAG,
+        [HASTAG]      = &&op_HASTAG
+    };
+#pragma GCC diagnostic pop
+
+#define DISPATCH() do { \
+    if (__builtin_expect(tf != NULL, 0)) goto do_trace; \
+    op = fetch_u8(fr); \
+    goto *dispatch_table[op]; \
+} while (0)
+#define OP_CASE(name) op_##name:
+
+    if (tf) goto do_trace;
+    op = fetch_u8(fr);
+    goto *dispatch_table[op];
+
+do_trace:
+#else
+#define DISPATCH() break
+#define OP_CASE(name) case name:
+
     while (true) {
+#endif
         uint16_t current_pc = fr->pc;
 
         /* Emit JSON trace step before executing instruction */
@@ -325,149 +407,154 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
             step_count++;
         }
 
-        uint8_t op = fetch_u8(fr);
+        op = fetch_u8(fr);
 
+#if defined(__GNUC__) && defined(USE_COMPUTED_GOTO)
+        goto *dispatch_table[op];
+#else
         switch (op) {
-        case 0x00: /* nop */
-            break;
+#endif
 
-        case ACONST_NULL:
+        OP_CASE(NOP)
+            DISPATCH();
+
+        OP_CASE(ACONST_NULL)
             stack_push(fr, c0_ptr(NULL));
-            break;
+            DISPATCH();
 
-        case BIPUSH: {
+        OP_CASE(BIPUSH) {
             int8_t b = (int8_t)fetch_u8(fr);
             stack_push(fr, c0_int((int32_t)b));
-            break;
+            DISPATCH();
         }
 
-        case ILDC: {
+        OP_CASE(ILDC) {
             uint16_t idx = fetch_u16(fr);
             if (idx >= bcf->int_count)
                 c0_abort("ildc: index %u out of range (int_count=%u)",
                          (unsigned)idx, (unsigned)bcf->int_count);
             stack_push(fr, c0_int(bcf->int_pool[idx]));
-            break;
+            DISPATCH();
         }
 
-        case ALDC: {
+        OP_CASE(ALDC) {
             uint16_t idx = fetch_u16(fr);
             if (idx >= bcf->string_count)
                 c0_abort("aldc: index %u out of range (string_count=%u)",
                          (unsigned)idx, (unsigned)bcf->string_count);
             stack_push(fr, c0_ptr((void *)&bcf->string_pool[idx]));
-            break;
+            DISPATCH();
         }
 
-        case VLOAD: {
+        OP_CASE(VLOAD) {
             uint8_t i = fetch_u8(fr);
             stack_push(fr, fr->V[i]);
-            break;
+            DISPATCH();
         }
 
-        case VSTORE: {
+        OP_CASE(VSTORE) {
             uint8_t  i = fetch_u8(fr);
             c0_value v = stack_pop(fr);
             fr->V[i]   = v;
-            break;
+            DISPATCH();
         }
 
-        case POP:
+        OP_CASE(POP)
             (void)stack_pop(fr);
-            break;
+            DISPATCH();
 
-        case POP2:
+        OP_CASE(POP2)
             (void)stack_pop(fr);
             (void)stack_pop(fr);
-            break;
+            DISPATCH();
 
-        case DUP: {
+        OP_CASE(DUP) {
             c0_value v = stack_peek(fr);
             stack_push(fr, v);
-            break;
+            DISPATCH();
         }
 
-        case SWAP: {
+        OP_CASE(SWAP) {
             c0_value a = stack_pop(fr);
             c0_value b = stack_pop(fr);
             stack_push(fr, a);
             stack_push(fr, b);
-            break;
+            DISPATCH();
         }
 
-        case IADD: {
+        OP_CASE(IADD) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             stack_push(fr, c0_int(x.payload.i + y.payload.i));
-            break;
+            DISPATCH();
         }
-        case ISUB: {
+        OP_CASE(ISUB) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             stack_push(fr, c0_int(x.payload.i - y.payload.i));
-            break;
+            DISPATCH();
         }
-        case IMUL: {
+        OP_CASE(IMUL) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             stack_push(fr, c0_int(x.payload.i * y.payload.i));
-            break;
+            DISPATCH();
         }
-        case IDIV: {
+        OP_CASE(IDIV) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             c0_check_div(y.payload.i);
             if (x.payload.i == INT32_MIN && y.payload.i == -1)
                 c0_abort("integer overflow: INT_MIN / -1");
             stack_push(fr, c0_int(x.payload.i / y.payload.i));
-            break;
+            DISPATCH();
         }
-        case IREM: {
+        OP_CASE(IREM) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             c0_check_div(y.payload.i);
             if (x.payload.i == INT32_MIN && y.payload.i == -1)
                 c0_abort("integer overflow: INT_MIN %% -1");
             stack_push(fr, c0_int(x.payload.i % y.payload.i));
-            break;
+            DISPATCH();
         }
-        case INEG: {
+        OP_CASE(INEG) {
             c0_value x = stack_pop(fr);
             stack_push(fr, c0_int(-x.payload.i));
-            break;
+            DISPATCH();
         }
 
-        case ISHL: {
+        OP_CASE(ISHL) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             c0_check_shift(y.payload.i);
             stack_push(fr, c0_int(x.payload.i << y.payload.i));
-            break;
+            DISPATCH();
         }
-        case ISHR: {
+        OP_CASE(ISHR) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             int32_t  s = y.payload.i;
             c0_check_shift(s);
             int32_t val = x.payload.i;
             int32_t res = (s == 0) ? val : (val >> s);
             stack_push(fr, c0_int(res));
-            break;
+            DISPATCH();
         }
-        case IUSHR: {
+        OP_CASE(IUSHR) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             c0_check_shift(y.payload.i);
             uint32_t u = (uint32_t)x.payload.i;
             stack_push(fr, c0_int((int32_t)(u >> (uint32_t)y.payload.i)));
-            break;
+            DISPATCH();
         }
-        case IAND: {
+        OP_CASE(IAND) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             stack_push(fr, c0_int(x.payload.i & y.payload.i));
-            break;
+            DISPATCH();
         }
-        case IOR: {
+        OP_CASE(IOR) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             stack_push(fr, c0_int(x.payload.i | y.payload.i));
-            break;
+            DISPATCH();
         }
-        case IXOR: {
+        OP_CASE(IXOR) {
             c0_value y = stack_pop(fr), x = stack_pop(fr);
             stack_push(fr, c0_int(x.payload.i ^ y.payload.i));
-            break;
+            DISPATCH();
         }
 
 #define BRANCH_INT1(cmp)                                       \
@@ -489,87 +576,87 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
             }                                                  \
         } while (0)
 
-        case IFEQ: BRANCH_INT1(==); break;
-        case IFNE: BRANCH_INT1(!=); break;
-        case IFLT: BRANCH_INT1(<);  break;
-        case IFGE: BRANCH_INT1(>=); break;
-        case IFGT: BRANCH_INT1(>);  break;
-        case IFLE: BRANCH_INT1(<=); break;
+        OP_CASE(IFEQ) BRANCH_INT1(==); DISPATCH();
+        OP_CASE(IFNE) BRANCH_INT1(!=); DISPATCH();
+        OP_CASE(IFLT) BRANCH_INT1(<);  DISPATCH();
+        OP_CASE(IFGE) BRANCH_INT1(>=); DISPATCH();
+        OP_CASE(IFGT) BRANCH_INT1(>);  DISPATCH();
+        OP_CASE(IFLE) BRANCH_INT1(<=); DISPATCH();
 
-        case IF_ICMPEQ: BRANCH_INT2(==); break;
-        case IF_ICMPNE: BRANCH_INT2(!=); break;
-        case IF_ICMPLT: BRANCH_INT2(<);  break;
-        case IF_ICMPGE: BRANCH_INT2(>=); break;
-        case IF_ICMPGT: BRANCH_INT2(>);  break;
-        case IF_ICMPLE: BRANCH_INT2(<=); break;
+        OP_CASE(IF_ICMPEQ) BRANCH_INT2(==); DISPATCH();
+        OP_CASE(IF_ICMPNE) BRANCH_INT2(!=); DISPATCH();
+        OP_CASE(IF_ICMPLT) BRANCH_INT2(<);  DISPATCH();
+        OP_CASE(IF_ICMPGE) BRANCH_INT2(>=); DISPATCH();
+        OP_CASE(IF_ICMPGT) BRANCH_INT2(>);  DISPATCH();
+        OP_CASE(IF_ICMPLE) BRANCH_INT2(<=); DISPATCH();
 
 #undef BRANCH_INT1
 #undef BRANCH_INT2
 
-        case ACMPEQ: {
+        OP_CASE(ACMPEQ) {
             int16_t  off = (int16_t)fetch_u16(fr);
             c0_value b   = stack_pop(fr);
             c0_value a   = stack_pop(fr);
             if (a.payload.p == b.payload.p)
                 fr->pc = (uint16_t)(fr->pc - 3 + off);
-            break;
+            DISPATCH();
         }
-        case ACMPNE: {
+        OP_CASE(ACMPNE) {
             int16_t  off = (int16_t)fetch_u16(fr);
             c0_value b   = stack_pop(fr);
             c0_value a   = stack_pop(fr);
             if (a.payload.p != b.payload.p)
                 fr->pc = (uint16_t)(fr->pc - 3 + off);
-            break;
+            DISPATCH();
         }
 
-        case GOTO: {
+        OP_CASE(GOTO) {
             int16_t off = (int16_t)fetch_u16(fr);
             fr->pc = (uint16_t)(fr->pc - 3 + off);
-            break;
+            DISPATCH();
         }
 
-        case IMLOAD: {
+        OP_CASE(IMLOAD) {
             c0_value addr = stack_pop(fr);
             c0_check_null(addr.payload.p);
             int32_t val;
             memcpy(&val, addr.payload.p, sizeof(int32_t));
             stack_push(fr, c0_int(val));
-            break;
+            DISPATCH();
         }
-        case IMSTORE: {
+        OP_CASE(IMSTORE) {
             c0_value val  = stack_pop(fr);
             c0_value addr = stack_pop(fr);
             c0_check_null(addr.payload.p);
             int32_t i = val.payload.i;
             memcpy(addr.payload.p, &i, sizeof(int32_t));
-            break;
+            DISPATCH();
         }
-        case AMLOAD: {
+        OP_CASE(AMLOAD) {
             c0_value addr = stack_pop(fr);
             c0_check_null(addr.payload.p);
             void *p;
             memcpy(&p, addr.payload.p, sizeof(void *));
             stack_push(fr, c0_ptr(p));
-            break;
+            DISPATCH();
         }
-        case AMSTORE: {
+        OP_CASE(AMSTORE) {
             c0_value val  = stack_pop(fr);
             c0_value addr = stack_pop(fr);
             c0_check_null(addr.payload.p);
             void *p = val.payload.p;
             memcpy(addr.payload.p, &p, sizeof(void *));
-            break;
+            DISPATCH();
         }
 
-        case NEW: {
+        OP_CASE(NEW) {
             uint8_t s = fetch_u8(fr);
             void *p   = xcalloc(1, s);
             track_heap_alloc(HEAP_STRUCT, p, (int32_t)s, 1);
             stack_push(fr, c0_ptr(p));
-            break;
+            DISPATCH();
         }
-        case GETFIELD: {
+        OP_CASE(GETFIELD) {
             uint8_t  o1  = fetch_u8(fr);
             uint8_t  o2  = fetch_u8(fr);
             uint16_t off = (uint16_t)((o1 << 8) | o2);
@@ -579,9 +666,9 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
             c0_value stored;
             memcpy(&stored, field_addr, sizeof(c0_value));
             stack_push(fr, stored);
-            break;
+            DISPATCH();
         }
-        case PUTFIELD: {
+        OP_CASE(PUTFIELD) {
             uint8_t  o1  = fetch_u8(fr);
             uint8_t  o2  = fetch_u8(fr);
             uint16_t off = (uint16_t)((o1 << 8) | o2);
@@ -590,32 +677,32 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
             c0_check_null(ptr.payload.p);
             void *field_addr = (char *)ptr.payload.p + off;
             memcpy(field_addr, &val, sizeof(c0_value));
-            break;
+            DISPATCH();
         }
-        case AADDF: {
+        OP_CASE(AADDF) {
             uint8_t  f   = fetch_u8(fr);
             c0_value ptr = stack_pop(fr);
             c0_check_null(ptr.payload.p);
             stack_push(fr, c0_ptr((char *)ptr.payload.p + f));
-            break;
+            DISPATCH();
         }
 
-        case NEWARRAY: {
+        OP_CASE(NEWARRAY) {
             uint8_t  s     = fetch_u8(fr);
             c0_value cnt_v = stack_pop(fr);
             int32_t  count = cnt_v.payload.i;
             c0_array *arr  = alloc_array(count, (int32_t)s);
             stack_push(fr, c0_ptr((void *)arr));
-            break;
+            DISPATCH();
         }
-        case ARRAYLENGTH: {
+        OP_CASE(ARRAYLENGTH) {
             c0_value arr_v = stack_pop(fr);
             c0_check_null(arr_v.payload.p);
             c0_array *arr = (c0_array *)arr_v.payload.p;
             stack_push(fr, c0_int(arr->count));
-            break;
+            DISPATCH();
         }
-        case AADDS: {
+        OP_CASE(AADDS) {
             c0_value idx_v = stack_pop(fr);
             c0_value arr_v = stack_pop(fr);
             c0_check_null(arr_v.payload.p);
@@ -623,10 +710,10 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
             int32_t   idx  = idx_v.payload.i;
             void     *ep   = array_elem_ptr(arr, idx);
             stack_push(fr, c0_ptr(ep));
-            break;
+            DISPATCH();
         }
 
-        case INVOKESTATIC: {
+        OP_CASE(INVOKESTATIC) {
             uint16_t fidx = fetch_u16(fr);
             if (fidx >= bcf->function_count)
                 c0_abort("invokestatic: function index %u out of range",
@@ -645,10 +732,10 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
             call_stack[call_depth++] = fr;
             fr = make_frame(fidx, callee, args);
             free(args);
-            break;
+            DISPATCH();
         }
 
-        case INVOKENATIVE: {
+        OP_CASE(INVOKENATIVE) {
             uint16_t nidx = fetch_u16(fr);
             if (nidx >= bcf->native_count)
                 c0_abort("invokenative: native index %u out of range",
@@ -669,10 +756,10 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
             free(args);
 
             stack_push(fr, retval);
-            break;
+            DISPATCH();
         }
 
-        case RETURN: {
+        OP_CASE(RETURN) {
             c0_value retval = stack_pop(fr);
 
             free_frame(fr);
@@ -689,31 +776,39 @@ int execute_with_trace(bc0_file *bcf, const char *trace_path) {
 
             fr = call_stack[call_depth];
             stack_push(fr, retval);
-            break;
+            DISPATCH();
         }
 
-        case ATHROW: {
+        OP_CASE(ATHROW) {
             c0_value msg_v = stack_pop(fr);
             const char *msg = (msg_v.kind == C0_POINTER && msg_v.payload.p)
                               ? (const char *)msg_v.payload.p
                               : "(no message)";
             if (tf) fclose(tf);
             c0_abort("user-level abort: %s", msg);
-            break;
+            DISPATCH();
         }
 
-        case CHECKTAG:
-        case HASTAG:
+        OP_CASE(CHECKTAG)
+        OP_CASE(HASTAG) {
             fetch_u8(fr);
             fetch_u8(fr);
-            break;
+            DISPATCH();
+        }
 
+#if defined(__GNUC__) && defined(USE_COMPUTED_GOTO)
+        op_DEFAULT:
+#else
         default:
+#endif
             if (tf) fclose(tf);
             c0_abort("unknown opcode 0x%02X at pc=%u", op,
                      (unsigned)(fr->pc - 1));
+
+#if !defined(__GNUC__) || !defined(USE_COMPUTED_GOTO)
         }
     }
+#endif
 
     if (tf) fclose(tf);
     return -1;
