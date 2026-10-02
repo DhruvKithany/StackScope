@@ -1,6 +1,6 @@
 /*
  * C0VM - C0 Virtual Machine
- * CMU 15-122: Principles of Imperative Computation
+ * C0 Virtual Machine Implementation
  *
  * c0vm.h - Core type definitions for the C0 bytecode interpreter.
  *
@@ -101,12 +101,14 @@ static inline c0_value c0_ptr(void *p) {
  * Execution frame – one per active function call
  * --------------------------------------------------------------------- */
 struct frame {
+    uint16_t  fn_id;    /* function_pool index */
     /* Bytecode and PC */
     uint8_t  *P;   /* bytecode array (points into function_pool entry) */
     uint16_t  pc;  /* program counter                                   */
 
     /* Local variables (includes arguments at low indices) */
     c0_value *V;   /* heap-allocated array of num_vars entries          */
+    uint16_t  num_vars;
 
     /* Operand stack (fixed max size = code_length, safe upper bound) */
     c0_value *S;   /* heap-allocated array                              */
@@ -145,9 +147,21 @@ void free_bc0_file(bc0_file *bcf);
 /* Execute the bytecode; returns the integer result of _c0_main() */
 int execute(bc0_file *bcf);
 
+/* Execute with JSON execution tracing for the visualizer */
+int execute_with_trace(bc0_file *bcf, const char *trace_path);
+
+/* Disassemble all functions in a bc0_file to stdout */
+void disassemble(bc0_file *bcf);
+
+/* Decode a single instruction at code[pc]; sets *next_pc and fills mnemonic_buf */
+void format_instruction(const uint8_t *code, uint16_t pc, uint16_t *next_pc,
+                        char *mnemonic_buf, size_t buf_size);
+
 /* -----------------------------------------------------------------------
  * Opcode constants  (mirror c0vm-ref.txt)
  * --------------------------------------------------------------------- */
+
+#define NOP   0x00
 
 /* Arithmetic */
 #define IADD  0x60
