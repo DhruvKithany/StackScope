@@ -1,0 +1,7 @@
+#use <conio>
+int main() {
+    int max_int = 2147483647;
+    int wrap = max_int + 1;
+    printint(wrap); println("");
+    return 0;
+}

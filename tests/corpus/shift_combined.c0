@@ -1,0 +1,9 @@
+#use <conio>
+int main() {
+    int val = 0x1234;
+    int byte0 = val & 0xFF;
+    int byte1 = (val >> 8) & 0xFF;
+    printint(byte0); print(" ");
+    printint(byte1); println("");
+    return 0;
+}

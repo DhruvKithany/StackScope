@@ -1,0 +1,11 @@
+#use <conio>
+int main() {
+    int x = 1024;
+    int i = 0;
+    while (i <= 10) {
+        printint(x >> i); print(" ");
+        i = i + 1;
+    }
+    println("");
+    return 0;
+}

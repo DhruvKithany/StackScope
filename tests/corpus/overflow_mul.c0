@@ -1,0 +1,7 @@
+#use <conio>
+int main() {
+    int x = 100000;
+    int wrap = x * x;
+    printint(wrap); println("");
+    return 0;
+}

@@ -1,0 +1,7 @@
+#use <conio>
+#use <string>
+int main() {
+    string s = "Hello C0VM";
+    printint(string_length(s)); println("");
+    return 0;
+}

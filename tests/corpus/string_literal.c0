@@ -1,0 +1,7 @@
+#use <conio>
+int main() {
+    println("Alpha");
+    println("Beta");
+    println("Gamma");
+    return 0;
+}

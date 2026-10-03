@@ -1,0 +1,10 @@
+// hello.c0 - Hello World in C0
+// Compile: python3 c0c.py examples/hello.c0
+// Run:     ./c0vm examples/hello.bc0
+
+#use <conio>
+
+int main() {
+    println("Hello, World!");
+    return 0;
+}

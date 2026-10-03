@@ -1,0 +1,11 @@
+#use <conio>
+int sum_rec(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return n + sum_rec(n - 1);
+}
+int main() {
+    printint(sum_rec(10)); println("");
+    return 0;
+}
