@@ -2,6 +2,7 @@
 ### High-Performance C0 Bytecode Virtual Machine & Interactive Systems Visualizer
 
 [![CI](https://github.com/DhruvKithany/StackScope/actions/workflows/ci.yml/badge.svg)](https://github.com/DhruvKithany/StackScope/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Visualizer-GitHub%20Pages-brightgreen)](https://dhruvkithany.github.io/StackScope/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A high-performance, stack-based bytecode virtual machine, disassembler, compiler toolchain, and interactive time-travel execution visualizer implementing the C0 language bytecode specification (a strongly-typed, memory-safe C derivative with safe dynamic memory management).
