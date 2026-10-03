@@ -81,7 +81,7 @@ A high-performance, stack-based bytecode virtual machine, disassembler, compiler
 | [`c0c.py`](c0c.py) | Compiler Frontend | Python 3 | 934 | 33,280 | Lexer, recursive-descent parser, AST generator, binary `.bc0` emitter |
 | [`run_all_tests.py`](run_all_tests.py) | Test Harness | Python 3 | 168 | 6,430 | Automated test orchestrator with ANSI reporting |
 | [`tests/generate_tests.py`](tests/generate_tests.py) | Bytecode Suite | Python 3 | 501 | 16,480 | Hand-crafted binary test generator for low-level opcode coverage |
-| [`visualizer/index.html`](visualizer/index.html) | Systems Visualizer | HTML5/JS | 1,593 | 54,200 | Time-travel debugger, hardware telemetry, pedagogical narrative engine |
+| [`visualizer/index.html`](visualizer/index.html) | Systems Visualizer | HTML5/JS | 1,593 | 54,200 | Time-travel debugger, execution log & state inspection, pedagogical narrative engine |
 
 ---
 
