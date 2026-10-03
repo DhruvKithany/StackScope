@@ -1,0 +1,10 @@
+#use <conio>
+int main() {
+    int n = 12345;
+    while (n > 0) {
+        printint(n % 10);
+        n = n / 10;
+    }
+    println("");
+    return 0;
+}

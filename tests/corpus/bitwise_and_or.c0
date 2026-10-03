@@ -1,0 +1,8 @@
+#use <conio>
+int main() {
+    int a = 0x0F;
+    int b = 0x33;
+    printint(a & b); print(" ");
+    printint(a | b); println("");
+    return 0;
+}

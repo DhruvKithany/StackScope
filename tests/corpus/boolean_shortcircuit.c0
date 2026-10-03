@@ -1,0 +1,12 @@
+#use <conio>
+int main() {
+    bool a = true;
+    bool b = false;
+    if (a && !b) {
+        println("and passed");
+    }
+    if (b || a) {
+        println("or passed");
+    }
+    return 0;
+}

@@ -1,0 +1,10 @@
+#use <conio>
+int main() {
+    int a = -10;
+    int b = 3;
+    printint(-a); print(" ");
+    printint(a + b); print(" ");
+    printint(a * b); print(" ");
+    printint(a / b); println("");
+    return 0;
+}

@@ -1,0 +1,8 @@
+#use <conio>
+int main() {
+    char c = 'A';
+    printchar(c);
+    printchar('
+');
+    return 0;
+}
