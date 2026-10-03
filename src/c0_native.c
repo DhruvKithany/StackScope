@@ -30,6 +30,14 @@ static inline const char *arg_str(c0_value *args, int i) {
 }
 static inline void *arg_ptr(c0_value *args, int i) { return args[i].payload.p; }
 
+static inline char *c0_strdup(const char *s) {
+    if (!s) return NULL;
+    size_t len = strlen(s);
+    char *copy = (char *)malloc(len + 1);
+    if (copy) memcpy(copy, s, len + 1);
+    return copy;
+}
+
 static char  *trace_out_buf = NULL;
 static size_t trace_out_len = 0;
 static size_t trace_out_cap = 0;
@@ -117,13 +125,13 @@ c0_value c0_readline(c0_value *args) {
     char *line = fgets(buf, sizeof(buf), stdin);
     if (line == NULL) {
         /* EOF – return empty string */
-        char *s = strdup("");
+        char *s = c0_strdup("");
         return c0_ptr((void *)s);
     }
     /* Strip trailing newline */
     size_t len = strlen(line);
     if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0';
-    char *s = strdup(line);
+    char *s = c0_strdup(line);
     if (s == NULL) c0_abort("readline: out of memory");
     return c0_ptr((void *)s);
 }
@@ -243,7 +251,7 @@ c0_value c0_string_from_chararray(c0_value *args) {
 c0_value c0_int_to_string(c0_value *args) {
     char buf[32];
     snprintf(buf, sizeof(buf), "%d", arg_int(args, 0));
-    char *s = strdup(buf);
+    char *s = c0_strdup(buf);
     if (!s) c0_abort("int_to_string: out of memory");
     return c0_ptr((void *)s);
 }
@@ -259,7 +267,7 @@ c0_value c0_string_to_int(c0_value *args) {
 
 c0_value c0_bool_to_string(c0_value *args) {
     const char *lit = arg_int(args, 0) ? "true" : "false";
-    char *s = strdup(lit);
+    char *s = c0_strdup(lit);
     if (!s) c0_abort("bool_to_string: out of memory");
     return c0_ptr((void *)s);
 }
