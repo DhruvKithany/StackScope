@@ -1,0 +1,10 @@
+#use <conio>
+int main() {
+    int x = 10;
+    if (x > 5) {
+        println("greater");
+    } else {
+        println("lesser");
+    }
+    return 0;
+}

@@ -1,0 +1,14 @@
+#use <conio>
+int main() {
+    int x = 0;
+    if (x > 0) {
+        println("positive");
+    } else {
+        if (x < 0) {
+            println("negative");
+        } else {
+            println("zero");
+        }
+    }
+    return 0;
+}

@@ -1,0 +1,14 @@
+#use <conio>
+int main() {
+    int i = 1;
+    while (i <= 5) {
+        int j = 1;
+        while (j <= 5) {
+            printint(i * j); print(" ");
+            j = j + 1;
+        }
+        println("");
+        i = i + 1;
+    }
+    return 0;
+}
