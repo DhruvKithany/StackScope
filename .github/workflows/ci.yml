@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Build C Runtime (Ubuntu)
+      if: runner.os != 'Windows'
+      run: |
+        gcc -std=c11 -O2 -Wall -Wextra -Werror -Iinclude \
+          src/c0vm_main.c src/bc0_reader.c src/c0vm.c src/c0_native.c src/c0vm_disasm.c \
+          -o c0vm
+
+    - name: Build C Runtime (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        gcc -std=c11 -O2 -Wall -Wextra -Werror -Iinclude `
+          src/c0vm_main.c src/bc0_reader.c src/c0vm.c src/c0_native.c src/c0vm_disasm.c `
+          -o c0vm.exe
+
+    - name: Run Complete Test Suite
+      run: python run_all_tests.py
