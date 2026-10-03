@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>C0 Virtual Machine — Execution & Systems Visualizer</title>
+  <title>StackScope — C0 Virtual Machine & Time-Travel Debugger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -723,7 +723,7 @@
   <!-- Top Control Bar -->
   <header>
     <div class="brand">
-      <span class="brand-title">C0VM</span>
+      <span class="brand-title">StackScope</span>
       <span class="brand-badge">TIME-TRAVEL ENGINE</span>
     </div>
 
@@ -1274,6 +1274,34 @@ do_iadd:
             transition: 'S, arr, idx -> S, &arr[idx]',
             desc: 'Guards bounds (0 <= idx < count), computes element address &arr[idx], and pushes pointer.',
             callout: 'Bounds verified; pushed element address pointer.'
+          };
+        case 'aaddf':
+          return {
+            title: `AADDF (+${arg}B)`,
+            transition: `S, struct_ptr -> S, &(struct_ptr->field)`,
+            desc: `Computes field address inside struct at byte offset ${arg} and pushes pointer.`,
+            callout: `Computed struct field offset +${arg} bytes.`
+          };
+        case 'arraylength':
+          return {
+            title: 'ARRAYLENGTH',
+            transition: 'S, arr_ptr -> S, count',
+            desc: 'Reads length header from bounded array and pushes element count onto stack.',
+            callout: 'Loaded array length metadata onto stack.'
+          };
+        case 'nop':
+          return {
+            title: 'NOP',
+            transition: 'S -> S',
+            desc: 'No-operation instruction; advances program counter without altering stack state.',
+            callout: 'Executed NOP; stack unmodified.'
+          };
+        case 'athrow':
+          return {
+            title: 'ATHROW',
+            transition: 'S, err -> abort',
+            desc: 'Throws runtime exception and aborts execution with diagnostic message.',
+            callout: 'User exception triggered; execution aborted.'
           };
         case 'imload':
           return {
