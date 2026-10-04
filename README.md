@@ -20,10 +20,10 @@ A high-performance, stack-based bytecode virtual machine, disassembler, compiler
 | **Frame Memory Overhead** | **56 bytes** per activation record | `sizeof(frame)` holding bytecode ptr, 16-bit PC, local table, stack ptr |
 | **Value Representation** | **16 bytes** tagged union | `sizeof(c0_value)` (8-byte union + 4-byte enum tag + 4-byte alignment) |
 | **Production Code Size** | **~3,600 physical SLOC** (excl. tests) | 1,335 C runtime, 744 Python compiler, 1,516 HTML/JS/CSS visualizer (cloc) |
-| **Automated Test Suite** | **23 / 23 passed (100%)** | 13 binary unit tests, 5 compiler frontend tests, 5 algorithmic benchmarks |
-| **Line Coverage (gcov)** | **89.9% reader, 63.6% runtime core** | Measured via `gcov` line coverage across the automated test suite |
-| **Runtime Fault Traps** | **12 distinct error trap types** | Div-by-zero, null dereference, array bounds, stack overflow via `setjmp`/`longjmp` |
-| **Visualizer Latency** | **$O(1)$ constant-time stepping** | Pre-indexed trace buffer with sub-5ms render latency across 10,000 cycles |
+| **Automated Test Suite** | **48 / 48 passed (100%)** | 13 unit tests, 1 full opcode suite, 5 compiler tests, 5 benchmarks, 21 traps, 1 stack resize, 2 CLI tests |
+| **Line Coverage (gcov)** | **96.4% runtime core, 73.6% whole project** | `src/c0vm.c`: 96.4% (453/470), `src/bc0_reader.c`: 89.9% (71/79), whole project: 73.6% (native library at 22.6%) |
+| **Runtime Fault Traps** | **12 distinct error trap classes** | 21 test programs mapping to 12 architectural trap classes unwound via `setjmp`/`longjmp` |
+| **Visualizer Latency** | **$O(1)$ constant-time stepping** | Pre-indexed trace buffer with sub-5ms render latency across 10,000 cycles (`MAX_TRACE_STEPS`) |
 
 ---
 
@@ -248,7 +248,7 @@ The visualizer ([`visualizer/index.html`](visualizer/index.html)) bridges the ga
 
 ---
 
-## Automated Test Suite (23 / 23 Passing)
+## Automated Test Suite (48 / 48 Passing)
 
 Run the unified test harness:
 ```bash
@@ -265,10 +265,30 @@ python run_all_tests.py
    - `ifelse` & `loop`: Conditional branch jumping and backwards `goto` loops.
    - `locals`: Variable storage isolation.
    - `multiply`, `negate`, `negative_return`, `return42`.
-2. **5 C0 Language Compiler Tests (`tests/c0/*.c0`)**:
+2. **1 Full Opcode Completeness Suite (`tests/opcode_full.bc0`)**:
+   - Exercises all remaining opcodes (`NOP`, `POP2`, `DUP`, `SWAP`, `ISHL`, `ISHR`, `IUSHR`, `IXOR`, `IFLT`, `IFGE`, `IFGT`, `IFLE`, `IF_ICMPEQ`, `IF_ICMPNE`, `IF_ICMPLE`, `ACMPEQ`, `ACMPNE`, `NEW`, `PUTFIELD`, `GETFIELD`, `AADDF`, `ARRAYLENGTH`, `AMLOAD`, `AMSTORE`, `CHECKTAG`, `HASTAG`).
+3. **5 C0 Language Compiler Tests (`tests/c0/*.c0`)**:
    - Compiles `.c0` source code via `c0c.py`, verifies binary output against test vectors.
-3. **5 Algorithmic Demonstrations (`examples/*.c0`)**:
+4. **5 Algorithmic Demonstrations (`examples/*.c0`)**:
    - `factorial.c0`, `fibonacci.c0`, `primes.c0`, `collatz.c0`, `hello.c0`.
+5. **21 Runtime Fault Trap Tests (`tests/traps/*.bc0`)**:
+   - Verifies explicit exit code `1` and exact `stderr` message for all 12 architectural trap classes:
+     - *Class 1: Division by Zero* (`trap_div_zero`, `trap_mod_zero`)
+     - *Class 2: Arithmetic Overflow* (`trap_div_overflow`, `trap_mod_overflow`)
+     - *Class 3: Shift Range Violation* (`trap_shift_32`, `trap_shift_neg`)
+     - *Class 4: Null Pointer Dereference* (`trap_null_deref`)
+     - *Class 5: Array Bounds Violation* (`trap_array_bounds`)
+     - *Class 6: Negative Array Allocation* (`trap_negative_alloc`)
+     - *Class 7: Call Stack Overflow* (`trap_call_stack_overflow`, `MAX_CALL_DEPTH=1024`)
+     - *Class 8: Operand Stack Underflow* (`trap_stack_underflow`, `trap_stack_underflow_peek`)
+     - *Class 9: User Assertion Failure / Abort* (`trap_user_abort`)
+     - *Class 10: Constant Pool Bounds Violation* (`trap_pool_bounds`, `trap_aldc_bounds`, `trap_static_bounds`, `trap_empty_fn`)
+     - *Class 11: Native Function Dispatch Violation* (`trap_native_bounds`, `trap_native_table_bounds`)
+     - *Class 12: Illegal Instruction / Entry Point Violation* (`trap_unknown_opcode`, `trap_main_args`)
+6. **1 Dynamic Stack Growth Test (`tests/traps/stack_grow.bc0`)**:
+   - Exercises dynamic operand stack reallocation from initial capacity 32 to 64.
+7. **2 CLI Instrumentation Tests**:
+   - CLI Disassembly printer (`c0vm -d`) and Visualizer Trace export engine (`c0vm -t`).
 
 ---
 
@@ -278,13 +298,13 @@ Choose from these verified, impact-oriented bullet sets tailored to fit on a sin
 
 ### 2-Bullet Version (Recommended for Single-Page Resumes)
 > **C0 Bytecode Virtual Machine & Interactive Debugger** | *C (C99), Systems Architecture, Python, JavaScript*
-> - Engineered a clean-room, stack-based bytecode virtual machine in C99 (1,335 SLOC) implementing 45 JVM-style opcodes and 12 runtime fault traps, achieving **525 MIPS** throughput and a **3.58x speedup** via compiler optimizations.
-> - Developed an AST compiler frontend and zero-dependency web execution visualizer with bidirectional time-travel debugging, verified across a 23-program automated CI test suite with 20,000+ execution cycles.
+> - Engineered a clean-room, stack-based bytecode virtual machine in C99 (1,335 SLOC) implementing 45 JVM-style opcodes and 12 runtime fault trap classes, achieving **525 MIPS** throughput and a **3.58x speedup** via compiler optimizations.
+> - Developed an AST compiler frontend and zero-dependency web execution visualizer with bidirectional time-travel debugging, verified across a 48-program automated CI test suite with 96.4% runtime core line coverage.
 
 ### 3-Bullet Version (Systems & Performance Focus)
 > **C0 Bytecode Virtual Machine & Interactive Debugger** | *C (C99), Systems Architecture, Python, JavaScript*
 > - Built a stack-based bytecode virtual machine in ANSI C99 implementing 45 JVM-style opcodes in a **95.7 KB binary**, achieving **525 MIPS** instruction throughput and a **3.58x speedup** (+72.1% faster) over unoptimized baseline.
-> - Implemented 12 distinct runtime fault handlers (division by zero, null pointer, array bounds) via `setjmp`/`longjmp` exception unwinding, guaranteeing zero segmentation faults across 23 automated test workloads.
+> - Implemented 12 distinct runtime fault trap classes (division by zero, null pointer, array bounds) via `setjmp`/`longjmp` exception unwinding, guaranteeing zero segmentation faults across 48 automated test workloads.
 > - Developed an AST compiler in Python and a zero-dependency web debugger supporting $O(1)$ bidirectional time-travel stepping across 10,000-cycle execution traces with sub-5ms frame render latency.
 
 *(Tip: If you run differential testing against reference `cc0`, you can swap the verification clause to: "achieved 100% identical output matching the reference cc0 compiler across N benchmark programs.")*

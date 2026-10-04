@@ -29,6 +29,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#define MAX_CALL_DEPTH  1024
+#define MAX_TRACE_STEPS 10000
+
 /* -----------------------------------------------------------------------
  * Forward declarations
  * --------------------------------------------------------------------- */

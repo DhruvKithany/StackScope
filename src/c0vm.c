@@ -17,8 +17,12 @@
 #include "c0_native.h"
 
 #define STACK_INIT_CAP  32
+#ifndef MAX_CALL_DEPTH
 #define MAX_CALL_DEPTH  1024
+#endif
+#ifndef MAX_TRACE_STEPS
 #define MAX_TRACE_STEPS 10000
+#endif
 
 /* -----------------------------------------------------------------------
  * Safe allocators

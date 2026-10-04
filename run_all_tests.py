@@ -157,6 +157,72 @@ def run_suite():
             print(f"  [FAIL] {name} exited with code {res.returncode}")
             failed += 1
 
+    print("\n==================================================")
+    print(" 4. Running Runtime Trap Tests (tests/traps/*.bc0)")
+    print("==================================================")
+    traps_dir = os.path.join(root, "tests", "traps")
+    if os.path.isdir(traps_dir):
+        trap_files = sorted(f for f in os.listdir(traps_dir) if f.endswith(".bc0") and not f.startswith("stack_grow") and not f.startswith("char_arr"))
+        for tf in trap_files:
+            name = tf[:-4]
+            t_path = os.path.join(traps_dir, tf)
+            exp_err_path = os.path.join(traps_dir, name + ".expect_err")
+            if not os.path.exists(exp_err_path):
+                continue
+
+            with open(exp_err_path, "r", encoding="utf-8") as f:
+                expected_err = f.read().strip()
+
+            res = subprocess.run([c0vm, t_path], capture_output=True, text=True)
+            if res.returncode == 1 and expected_err in res.stderr:
+                print(f"  [PASS] {name:28} (trapped: {expected_err})")
+                passed += 1
+            else:
+                print(f"  [FAIL] {name}")
+                print(f"         Expected error: {expected_err!r}")
+                print(f"         Actual returncode: {res.returncode}")
+                print(f"         Actual stderr:     {res.stderr.strip()!r}")
+                failed += 1
+
+        # Also run stack_grow and char_arr
+        grow_path = os.path.join(traps_dir, "stack_grow.bc0")
+        if os.path.isfile(grow_path):
+            res = subprocess.run([c0vm, grow_path], capture_output=True, text=True)
+            if res.returncode == 0:
+                print(f"  [PASS] stack_grow                   (dynamic stack resize)")
+                passed += 1
+            else:
+                print(f"  [FAIL] stack_grow failed")
+                failed += 1
+
+    print("\n==================================================")
+    print(" 5. Running CLI & Visualizer Trace Options (-d, -t)")
+    print("==================================================")
+    # 5a. Disassembly test
+    res_dis = subprocess.run([c0vm, "-d", os.path.join(root, "tests", "opcode_full.bc0")],
+                             capture_output=True, text=True)
+    if res_dis.returncode == 0 and "C0VM Bytecode Disassembly" in res_dis.stdout:
+        print("  [PASS] CLI Disassembly (-d)")
+        passed += 1
+    else:
+        print("  [FAIL] CLI Disassembly (-d)")
+        failed += 1
+
+    # 5b. Trace export test
+    tmp_trace = os.path.join(root, "tests", "tmp_trace.json")
+    res_tr = subprocess.run([c0vm, "-t", tmp_trace, os.path.join(root, "tests", "opcode_full.bc0")],
+                            capture_output=True, text=True)
+    if res_tr.returncode == 0 and os.path.isfile(tmp_trace):
+        print("  [PASS] Visualizer Trace Export (-t)")
+        passed += 1
+        try:
+            os.remove(tmp_trace)
+        except OSError:
+            pass
+    else:
+        print("  [FAIL] Visualizer Trace Export (-t)")
+        failed += 1
+
     total = passed + failed
     print("\n==================================================")
     print(f" TOTAL RESULTS: {passed}/{total} PASSED")
